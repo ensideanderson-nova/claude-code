@@ -1,0 +1,1260 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🗄️ ENSIDE DATABASE - Sistema Inteligente</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root { --primary: #667eea; --secondary: #764ba2; --success: #28a745; --danger: #dc3545; --warning: #ffc107; --whatsapp: #25D366; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); min-height: 100vh; padding: 12px; }
+        .container { max-width: 1400px; margin: 0 auto; }
+        .panel { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); margin-bottom: 12px; }
+        .header { text-align: center; padding-bottom: 15px; border-bottom: 2px solid #f0f0f0; }
+        .header h1 { color: var(--primary); font-size: 2em; }
+        .header .status { display: inline-flex; align-items: center; gap: 8px; color: var(--success); font-weight: bold; margin-top: 10px; padding: 8px 20px; background: #d4edda; border-radius: 20px; }
+        .header .pulse { width: 10px; height: 10px; background: var(--success); border-radius: 50%; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(1.3)} }
+        .tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+        .tab-btn { padding: 10px 16px; background: #f5f5f5; border: none; cursor: pointer; font-weight: 600; color: #666; border-radius: 8px; transition: all 0.3s; display: flex; align-items: center; gap: 6px; }
+        .tab-btn:hover { background: #e8e8e8; }
+        .tab-btn.active { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; }
+        .tab-btn .badge { background: rgba(255,255,255,0.3); padding: 2px 8px; border-radius: 10px; font-size: 0.8em; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .section-title { color: var(--primary); font-size: 1.3em; margin-bottom: 15px; font-weight: 600; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px; }
+        .upload-area { border: 3px dashed var(--primary); border-radius: 12px; padding: 35px; text-align: center; cursor: pointer; background: #f9f9f9; transition: all 0.3s; }
+        .upload-area:hover { background: #f0f0ff; border-color: var(--secondary); }
+        input[type="file"] { display: none; }
+        .alert { padding: 15px; border-radius: 10px; margin: 12px 0; border-left: 4px solid; }
+        .alert.success { background: #d4edda; border-left-color: var(--success); color: #155724; }
+        .alert.error { background: #f8d7da; border-left-color: var(--danger); color: #721c24; }
+        .alert.info { background: #d1ecf1; border-left-color: #17a2b8; color: #0c5460; }
+        .alert.warning { background: #fff3cd; border-left-color: var(--warning); color: #856404; }
+        .dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin: 15px 0; }
+        .stat { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; padding: 18px; border-radius: 12px; text-align: center; transition: transform 0.3s; }
+        .stat:hover { transform: translateY(-3px); }
+        .stat.success { background: linear-gradient(135deg, var(--success), #20c997); }
+        .stat.warning { background: linear-gradient(135deg, var(--warning), #fd7e14); }
+        .stat.whatsapp { background: linear-gradient(135deg, var(--whatsapp), #128C7E); }
+        .stat-number { font-size: 2em; font-weight: bold; }
+        .stat-label { font-size: 0.85em; opacity: 0.9; }
+        .search-box input { width: 100%; padding: 12px 12px 12px 40px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1em; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23999' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z'/%3E%3C/svg%3E") no-repeat 12px center; background-size: 18px; margin-bottom: 12px; }
+        .search-box input:focus { outline: none; border-color: var(--primary); }
+        .card { background: #f9f9f9; padding: 15px; border-radius: 10px; margin-bottom: 10px; border-left: 4px solid var(--primary); transition: all 0.3s; }
+        .card:hover { transform: translateX(5px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .card-title { font-weight: 600; color: #333; }
+        .card-badge { padding: 3px 10px; border-radius: 12px; font-size: 0.75em; font-weight: 600; }
+        .badge-cliente { background: #e3f2fd; color: #1976d2; }
+        .badge-fornecedor { background: #fff3e0; color: #f57c00; }
+        .badge-motorista { background: #e8f5e9; color: #388e3c; }
+        .card-field { color: #666; font-size: 0.9em; margin: 4px 0; }
+        .card-field a { color: var(--whatsapp); text-decoration: none; font-weight: 600; }
+        table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+        thead { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; }
+        th, td { padding: 10px; text-align: left; }
+        tbody tr { border-bottom: 1px solid #eee; }
+        tbody tr:hover { background: #f9f9f9; }
+        button { padding: 10px 18px; background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; margin: 5px 5px 5px 0; transition: all 0.3s; }
+        button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        .btn-full { width: 100%; margin: 8px 0; padding: 14px; }
+        .btn-success { background: linear-gradient(135deg, var(--success), #20c997); }
+        .btn-danger { background: linear-gradient(135deg, var(--danger), #fd7e14); }
+        .btn-whatsapp { background: linear-gradient(135deg, var(--whatsapp), #128C7E); }
+        .btn-warning { background: linear-gradient(135deg, var(--warning), #fd7e14); color: #333; }
+        .btn-small { padding: 6px 12px; font-size: 0.85em; }
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 600; color: #333; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1em; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--primary); }
+        .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+        .chat-box { border: 2px solid var(--primary); border-radius: 12px; overflow: hidden; margin-top: 15px; }
+        .chat-header { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; }
+        .chat-messages { height: 280px; overflow-y: auto; padding: 15px; background: #f5f5f5; }
+        .chat-msg { margin: 10px 0; padding: 12px 15px; border-radius: 12px; max-width: 85%; line-height: 1.5; }
+        .chat-msg.user { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; margin-left: auto; border-bottom-right-radius: 4px; }
+        .chat-msg.agent { background: white; border: 1px solid #e0e0e0; border-bottom-left-radius: 4px; }
+        .chat-msg .time { font-size: 0.7em; opacity: 0.7; margin-top: 5px; }
+        .chat-input { display: flex; border-top: 2px solid var(--primary); }
+        .chat-input input { flex: 1; padding: 14px; border: none; font-size: 1em; }
+        .chat-input button { border-radius: 0; margin: 0; }
+        .list-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #f9f9f9; border-radius: 10px; margin-bottom: 10px; border-left: 4px solid var(--primary); }
+        .list-item:hover { background: #f0f0f0; }
+        .list-info h4 { color: #333; margin-bottom: 5px; }
+        .list-info p { color: #666; font-size: 0.85em; }
+        .list-count { background: var(--primary); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 600; }
+        .progress-bar { height: 10px; background: #e0e0e0; border-radius: 5px; overflow: hidden; margin: 8px 0; }
+        .progress-fill { height: 100%; background: linear-gradient(135deg, var(--primary), var(--secondary)); transition: width 0.5s; }
+        .task-item { display: flex; align-items: center; gap: 12px; padding: 12px; background: #f9f9f9; border-radius: 10px; margin-bottom: 8px; }
+        .task-check { width: 22px; height: 22px; border: 2px solid var(--primary); border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.8em; }
+        .task-check.done { background: var(--success); border-color: var(--success); color: white; }
+        .task-content { flex: 1; }
+        .task-content.done { text-decoration: line-through; opacity: 0.6; }
+        .priority-alta { background: #ffebee; color: var(--danger); padding: 3px 10px; border-radius: 10px; font-size: 0.8em; }
+        .priority-media { background: #fff3e0; color: #f57c00; padding: 3px 10px; border-radius: 10px; font-size: 0.8em; }
+        .priority-baixa { background: #e8f5e9; color: var(--success); padding: 3px 10px; border-radius: 10px; font-size: 0.8em; }
+        .knowledge-card { background: linear-gradient(135deg, #f5f7fa, #e8ecf1); padding: 15px; border-radius: 12px; margin-bottom: 12px; }
+        .knowledge-card h4 { color: #333; margin-bottom: 8px; }
+        .knowledge-card p { color: #666; line-height: 1.5; font-size: 0.95em; }
+        .knowledge-tags { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+        .knowledge-tag { background: var(--primary); color: white; padding: 3px 10px; border-radius: 12px; font-size: 0.8em; }
+        .inner-tabs { display: flex; gap: 8px; margin-bottom: 15px; flex-wrap: wrap; }
+        .inner-tab { padding: 8px 14px; background: #f0f0f0; border: none; cursor: pointer; color: #666; font-weight: 600; border-radius: 6px; }
+        .inner-tab:hover { background: #e0e0e0; }
+        .inner-tab.active { background: var(--primary); color: white; }
+        @media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } .dashboard { grid-template-columns: repeat(2, 1fr); } .tabs { justify-content: center; } }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- HEADER -->
+    <div class="panel">
+        <div class="header">
+            <h1>🗄️ ENSIDE DATABASE</h1>
+            <p><strong>Enside Madeiras</strong> - Anderson Enside</p>
+            <div class="status">
+                <div class="pulse"></div>
+                <span>🧠 AGENTE IA ATIVO - Nível <span id="headerNivel">1</span></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- NAVEGAÇÃO -->
+    <div class="panel">
+        <div class="tabs">
+            <button class="tab-btn active" onclick="abrirAba('importar',this)">📤 Importar</button>
+            <button class="tab-btn" onclick="abrirAba('cadastrar',this)">➕ Cadastrar</button>
+            <button class="tab-btn" onclick="abrirAba('clientes',this)">👥 Clientes <span class="badge" id="badgeCli">0</span></button>
+            <button class="tab-btn" onclick="abrirAba('fornecedores',this)">📦 Fornecedores <span class="badge" id="badgeFor">0</span></button>
+            <button class="tab-btn" onclick="abrirAba('motoristas',this)">🚚 Motoristas <span class="badge" id="badgeMot">0</span></button>
+            <button class="tab-btn" onclick="abrirAba('listas',this)">📋 Listas <span class="badge" id="badgeListas">0</span></button>
+            <button class="tab-btn" onclick="abrirAba('analise',this)">📊 Análise</button>
+            <button class="tab-btn" onclick="abrirAba('agente',this)">🧠 Agente IA</button>
+            <button class="tab-btn" onclick="abrirAba('tarefas',this)">✅ Tarefas</button>
+            <button class="tab-btn" onclick="abrirAba('aprendizado',this)">📚 Aprendizado</button>
+            <button class="tab-btn" onclick="abrirAba('whatsapp',this)">📱 WhatsApp</button>
+            <button class="tab-btn" onclick="abrirAba('exportar',this)">💾 Exportar</button>
+        </div>
+    </div>
+
+    <!-- IMPORTAR -->
+    <div id="importar" class="tab-content active">
+        <div class="panel">
+            <div class="section-title">📤 Importar Dados (CSV/Excel) - Importador Inteligente</div>
+            <div class="alert info">
+                🧠 <strong>Triagem Automática:</strong> O agente analisa cada registro e classifica automaticamente como Cliente, Fornecedor ou Motorista baseado em padrões inteligentes!
+            </div>
+            <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+                <div style="font-size:2.5em;margin-bottom:10px">📁</div>
+                <div style="color:var(--primary);font-weight:600;font-size:1.1em">Clique para selecionar arquivo</div>
+                <div style="color:#999;margin-top:10px">CSV, Excel (.xlsx, .xls) - Suporta milhões de registros</div>
+            </div>
+            <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" onchange="importarArquivo(event)">
+            <div id="alertaImport"></div>
+
+            <div class="panel" style="background:linear-gradient(135deg,#667eea15,#764ba215);border:2px solid var(--primary);margin-top:20px;">
+                <h4 style="color:var(--primary);margin-bottom:10px;">🧠 Como funciona a Triagem Inteligente:</h4>
+                <p style="color:#666;line-height:1.6;">
+                    • <strong>Fornecedores:</strong> Detecta "madeireira", "serraria", "marcenaria", "carpintaria", "fábrica"<br>
+                    • <strong>Motoristas:</strong> Detecta "frete", "motorista", "transportadora", "caminhão", "carreta"<br>
+                    • <strong>Clientes:</strong> Demais registros (padrão)<br>
+                    • <strong>Por Tipo:</strong> Se tiver coluna "tipo", usa ela para classificar
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- CADASTRAR -->
+    <div id="cadastrar" class="tab-content">
+        <div class="panel">
+            <div class="section-title">➕ Novo Cadastro</div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Tipo</label>
+                    <select id="cadTipo">
+                        <option value="clientes">👥 Cliente</option>
+                        <option value="fornecedores">📦 Fornecedor</option>
+                        <option value="motoristas">🚚 Motorista</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Setor/Segmento</label>
+                    <select id="cadSetor">
+                        <option value="">Selecione...</option>
+                        <option value="madeireira">🪵 Madeireira</option>
+                        <option value="construcao">🏗️ Construção</option>
+                        <option value="moveis">🪑 Móveis</option>
+                        <option value="exportacao">🌍 Exportação</option>
+                        <option value="varejo">🏪 Varejo</option>
+                        <option value="industria">🏭 Indústria</option>
+                        <option value="outro">📌 Outro</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>Nome *</label><input type="text" id="cadNome" placeholder="Nome completo ou razão social"></div>
+                <div class="form-group"><label>Telefone</label><input type="text" id="cadTel" placeholder="(00) 00000-0000"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>WhatsApp</label><input type="text" id="cadWa" placeholder="(00) 00000-0000"></div>
+                <div class="form-group"><label>Email</label><input type="email" id="cadEmail" placeholder="email@exemplo.com"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>Cidade</label><input type="text" id="cadCidade"></div>
+                <div class="form-group"><label>Estado</label><input type="text" id="cadUF" maxlength="2" placeholder="SP"></div>
+            </div>
+            <button onclick="salvarCadastro()" class="btn-success btn-full">💾 Salvar Cadastro</button>
+            <div id="alertaCad"></div>
+        </div>
+    </div>
+
+    <!-- CLIENTES -->
+    <div id="clientes" class="tab-content">
+        <div class="panel">
+            <div class="section-title">👥 Clientes</div>
+            <div class="form-row" style="margin-bottom:12px;">
+                <div class="search-box" style="flex:2;margin:0;"><input type="text" id="buscaCli" placeholder="Buscar cliente..." oninput="filtrarClientes()"></div>
+                <select id="filtroSetorCli" onchange="filtrarClientes()" style="padding:10px;border:2px solid #e0e0e0;border-radius:8px;">
+                    <option value="">Todos setores</option>
+                    <option value="madeireira">🪵 Madeireira</option>
+                    <option value="construcao">🏗️ Construção</option>
+                    <option value="moveis">🪑 Móveis</option>
+                    <option value="exportacao">🌍 Exportação</option>
+                    <option value="varejo">🏪 Varejo</option>
+                    <option value="industria">🏭 Indústria</option>
+                </select>
+                <select id="filtroUFCli" onchange="filtrarClientes()" style="padding:10px;border:2px solid #e0e0e0;border-radius:8px;"></select>
+            </div>
+            <div id="listaCli"></div>
+        </div>
+    </div>
+
+    <!-- FORNECEDORES -->
+    <div id="fornecedores" class="tab-content">
+        <div class="panel">
+            <div class="section-title">📦 Fornecedores</div>
+            <div class="form-row" style="margin-bottom:12px;">
+                <div class="search-box" style="flex:2;margin:0;"><input type="text" id="buscaFor" placeholder="Buscar fornecedor..." oninput="filtrarFornecedores()"></div>
+                <select id="filtroUFFor" onchange="filtrarFornecedores()" style="padding:10px;border:2px solid #e0e0e0;border-radius:8px;"></select>
+            </div>
+            <div id="listaFor"></div>
+        </div>
+    </div>
+
+    <!-- MOTORISTAS -->
+    <div id="motoristas" class="tab-content">
+        <div class="panel">
+            <div class="section-title">🚚 Motoristas</div>
+            <div class="form-row" style="margin-bottom:12px;">
+                <div class="search-box" style="flex:2;margin:0;"><input type="text" id="buscaMot" placeholder="Buscar motorista..." oninput="filtrarMotoristas()"></div>
+                <select id="filtroUFMot" onchange="filtrarMotoristas()" style="padding:10px;border:2px solid #e0e0e0;border-radius:8px;"></select>
+            </div>
+            <div id="listaMot"></div>
+        </div>
+    </div>
+
+    <!-- LISTAS DE TRANSMISSÃO -->
+    <div id="listas" class="tab-content">
+        <div class="panel">
+            <div class="section-title">📋 Listas de Transmissão Setorizadas</div>
+            <div class="alert info">
+                📱 <strong>Limite WhatsApp:</strong> 256 contatos por lista | Sistema divide automaticamente | Suporte: 199 a 10.000.000 contatos
+            </div>
+
+            <div class="inner-tabs">
+                <button class="inner-tab active" onclick="abrirInner('listaCriar',this)">➕ Criar Lista</button>
+                <button class="inner-tab" onclick="abrirInner('listaGerenciar',this)">📋 Minhas Listas</button>
+            </div>
+
+            <div id="listaCriar" class="inner-content">
+                <div class="form-group"><label>Nome da Lista *</label><input type="text" id="listaNome" placeholder="Ex: Clientes SP - Madeireiras"></div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Filtrar por Tipo</label>
+                        <select id="listaFiltroTipo" onchange="previewLista()">
+                            <option value="">Todos</option>
+                            <option value="clientes">👥 Clientes</option>
+                            <option value="fornecedores">📦 Fornecedores</option>
+                            <option value="motoristas">🚚 Motoristas</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Filtrar por Setor</label>
+                        <select id="listaFiltroSetor" onchange="previewLista()">
+                            <option value="">Todos</option>
+                            <option value="madeireira">🪵 Madeireira</option>
+                            <option value="construcao">🏗️ Construção</option>
+                            <option value="moveis">🪑 Móveis</option>
+                            <option value="exportacao">🌍 Exportação</option>
+                            <option value="varejo">🏪 Varejo</option>
+                            <option value="industria">🏭 Indústria</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Filtrar por Estado</label>
+                        <select id="listaFiltroUF" onchange="previewLista()"></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Filtrar por Cidade</label>
+                        <input type="text" id="listaFiltroCidade" placeholder="Digite a cidade" oninput="previewLista()">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Limite de Contatos (199 a 10.000.000)</label>
+                    <input type="number" id="listaLimite" value="256" min="199" max="10000000" onchange="previewLista()">
+                </div>
+                <div id="previewListaInfo" class="alert info" style="display:none;"></div>
+                <button onclick="criarLista()" class="btn-success btn-full">✅ Criar Lista de Transmissão</button>
+                <div id="alertaLista"></div>
+            </div>
+
+            <div id="listaGerenciar" class="inner-content" style="display:none;">
+                <div id="minhasListas"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ANÁLISE -->
+    <div id="analise" class="tab-content">
+        <div class="panel">
+            <div class="section-title">📊 Dashboard de Análise</div>
+            <div class="dashboard">
+                <div class="stat"><div class="stat-number" id="sTotal">0</div><div class="stat-label">Total</div></div>
+                <div class="stat success"><div class="stat-number" id="sCli">0</div><div class="stat-label">Clientes</div></div>
+                <div class="stat warning"><div class="stat-number" id="sFor">0</div><div class="stat-label">Fornecedores</div></div>
+                <div class="stat"><div class="stat-number" id="sMot">0</div><div class="stat-label">Motoristas</div></div>
+                <div class="stat whatsapp"><div class="stat-number" id="sWa">0</div><div class="stat-label">Com WhatsApp</div></div>
+                <div class="stat success"><div class="stat-number" id="sListas">0</div><div class="stat-label">Listas</div></div>
+            </div>
+            <table>
+                <thead><tr><th>Categoria</th><th>Total</th><th>WhatsApp</th><th>Completos</th><th>Incompletos</th></tr></thead>
+                <tbody id="tblAnalise"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- AGENTE IA -->
+    <div id="agente" class="tab-content">
+        <div class="panel">
+            <div class="section-title">🧠 Agente IA - Assistente Inteligente</div>
+
+            <div class="dashboard">
+                <div class="stat"><div class="stat-number" id="agNivel">1</div><div class="stat-label">Nível</div></div>
+                <div class="stat success"><div class="stat-number" id="agXP">0</div><div class="stat-label">XP</div></div>
+                <div class="stat warning"><div class="stat-number" id="agPrecisao">50%</div><div class="stat-label">Precisão</div></div>
+                <div class="stat"><div class="stat-number" id="agInteracoes">0</div><div class="stat-label">Interações</div></div>
+            </div>
+
+            <div style="margin:15px 0;">
+                <p style="font-weight:600;color:#333;">Aprendizado do Agente:</p>
+                <div class="progress-bar"><div class="progress-fill" id="agProgress" style="width:10%"></div></div>
+                <p style="color:#666;font-size:0.9em;" id="agProgressText">10% - Iniciante</p>
+            </div>
+
+            <div class="chat-box">
+                <div class="chat-header">
+                    <span>🤖 Enside Agent</span>
+                    <span id="agTyping" style="display:none;font-size:0.9em;">digitando...</span>
+                </div>
+                <div class="chat-messages" id="chatMsgs">
+                    <div class="chat-msg agent">
+                        👋 Olá Anderson! Sou o <strong>Enside Agent</strong>.<br><br>
+                        📊 Posso te ajudar com:<br>
+                        • Análise de dados e contatos<br>
+                        • Criação de listas de transmissão<br>
+                        • Dicas e sugestões personalizadas<br>
+                        • Consulta de conhecimentos<br><br>
+                        <strong>O que precisa?</strong>
+                    </div>
+                </div>
+                <div class="chat-input">
+                    <input type="text" id="chatIn" placeholder="Pergunte algo..." onkeypress="if(event.key==='Enter')enviarMsg()">
+                    <button onclick="enviarMsg()">Enviar</button>
+                </div>
+            </div>
+
+            <div class="alert info" style="margin-top:15px;">
+                💡 <strong>Comandos:</strong> "resumo", "quantos clientes?", "buscar [nome]", "clientes de SP", "dica", "análise", "ajuda"
+            </div>
+        </div>
+    </div>
+
+    <!-- TAREFAS -->
+    <div id="tarefas" class="tab-content">
+        <div class="panel">
+            <div class="section-title">✅ Tarefas e Lembretes</div>
+            <div class="form-row">
+                <div class="form-group" style="flex:2;"><input type="text" id="novaTarefa" placeholder="Digite uma nova tarefa..."></div>
+                <div class="form-group">
+                    <select id="tarefaPrior">
+                        <option value="baixa">🟢 Baixa</option>
+                        <option value="media">🟡 Média</option>
+                        <option value="alta">🔴 Alta</option>
+                    </select>
+                </div>
+                <button onclick="addTarefa()" class="btn-success">➕</button>
+            </div>
+            <div class="inner-tabs">
+                <button class="inner-tab active" onclick="filtroTarefas('todas',this)">📋 Todas</button>
+                <button class="inner-tab" onclick="filtroTarefas('pendentes',this)">⏳ Pendentes</button>
+                <button class="inner-tab" onclick="filtroTarefas('concluidas',this)">✅ Concluídas</button>
+            </div>
+            <div id="listaTarefas"></div>
+            <div id="dicaTarefa" class="alert info" style="margin-top:15px;"></div>
+        </div>
+    </div>
+
+    <!-- APRENDIZADO -->
+    <div id="aprendizado" class="tab-content">
+        <div class="panel">
+            <div class="section-title">📚 Base de Conhecimento do Agente</div>
+            <div class="alert info">🧠 Ensine o agente! Adicione informações sobre produtos, preços, processos e clientes.</div>
+            <div class="form-group"><label>Título *</label><input type="text" id="conhTitulo" placeholder="Ex: Preços de Pinus Seco"></div>
+            <div class="form-group">
+                <label>Categoria</label>
+                <select id="conhCat">
+                    <option value="produtos">🪵 Produtos</option>
+                    <option value="precos">💰 Preços</option>
+                    <option value="processos">⚙️ Processos</option>
+                    <option value="clientes">👥 Clientes</option>
+                    <option value="fornecedores">📦 Fornecedores</option>
+                    <option value="frete">🚚 Frete</option>
+                    <option value="outro">📌 Outro</option>
+                </select>
+            </div>
+            <div class="form-group"><label>Conteúdo *</label><textarea id="conhConteudo" rows="4" placeholder="Ex: Pinus Seco custa R$ 1.200/m³. Madeira verde 1000kg/m³, seca 500kg/m³, murcha 750kg/m³."></textarea></div>
+            <div class="form-group"><label>Tags (separadas por vírgula)</label><input type="text" id="conhTags" placeholder="pinus, preço, seco"></div>
+            <button onclick="salvarConhecimento()" class="btn-success btn-full">💾 Salvar Conhecimento</button>
+            <div id="alertaConh"></div>
+            <h4 style="margin:25px 0 15px;color:#333;">📖 Conhecimentos Salvos</h4>
+            <div id="listaConh"></div>
+        </div>
+    </div>
+
+    <!-- WHATSAPP -->
+    <div id="whatsapp" class="tab-content">
+        <div class="panel">
+            <div class="section-title">📱 WhatsApp - Monitoramento</div>
+            <div class="alert warning">⚠️ Configure o webhook para o agente acompanhar conversas em tempo real</div>
+            <div class="dashboard">
+                <div class="stat whatsapp"><div class="stat-number" id="waConv">0</div><div class="stat-label">Conversas</div></div>
+                <div class="stat success"><div class="stat-number" id="waMsgs">0</div><div class="stat-label">Mensagens</div></div>
+                <div class="stat"><div class="stat-number" id="waAprend">0</div><div class="stat-label">Aprendizados</div></div>
+            </div>
+            <div class="form-group">
+                <label>🔗 Webhook WhatsApp</label>
+                <input type="text" id="waWebhook" placeholder="https://seu-webhook.com/whatsapp">
+                <button onclick="salvarWebhook()" class="btn-whatsapp" style="margin-top:10px;">💾 Salvar</button>
+            </div>
+            <h4 style="margin:20px 0 15px;color:#333;">📬 Conversas Recentes</h4>
+            <div id="waConversas"></div>
+            <button onclick="simularConversa()" class="btn-whatsapp btn-full" style="margin-top:15px;">➕ Simular Conversa (teste)</button>
+        </div>
+    </div>
+
+    <!-- EXPORTAR -->
+    <div id="exportar" class="tab-content">
+        <div class="panel">
+            <div class="section-title">💾 Exportar Dados</div>
+            <div class="dashboard">
+                <button onclick="exportCSV('clientes')" class="btn-success btn-full">📄 Clientes CSV</button>
+                <button onclick="exportCSV('fornecedores')" class="btn-success btn-full">📄 Fornecedores CSV</button>
+                <button onclick="exportCSV('motoristas')" class="btn-success btn-full">📄 Motoristas CSV</button>
+                <button onclick="exportJSON()" class="btn-full">📋 Tudo JSON</button>
+                <button onclick="exportWhatsApp()" class="btn-whatsapp btn-full">📱 Lista WhatsApp</button>
+                <button onclick="exportListas()" class="btn-full">📋 Listas Transmissão</button>
+            </div>
+            <hr style="margin:25px 0;border:1px solid #eee;">
+            <button onclick="limparTudo()" class="btn-danger btn-full">🗑️ Limpar Todo o Banco</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// ============================================================
+// 🗄️ BANCO DE DADOS - MANTENDO CHAVE ORIGINAL enside_db_v5
+// ============================================================
+let db = {
+    clientes: [],
+    fornecedores: [],
+    motoristas: [],
+    listas: [],
+    tarefas: [],
+    conhecimentos: [],
+    whatsapp: { webhook: '', conversas: [], mensagens: 0 },
+    agente: { nivel: 1, xp: 0, precisao: 50, interacoes: 0, imports: 0 }
+};
+
+function carregarDB() {
+    try {
+        // MANTER COMPATIBILIDADE - usa mesma chave anterior
+        const saved = localStorage.getItem('enside_db_v5');
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            // Migrar estrutura antiga se necessário
+            if (Array.isArray(parsed.clientes)) {
+                db.clientes = parsed.clientes || [];
+                db.fornecedores = parsed.fornecedores || [];
+                db.motoristas = parsed.motoristas || [];
+            }
+            db.listas = parsed.listas || [];
+            db.tarefas = parsed.tarefas || [];
+            db.conhecimentos = parsed.conhecimentos || [];
+            db.whatsapp = parsed.whatsapp || { webhook: '', conversas: [], mensagens: 0 };
+            db.agente = parsed.agente || { nivel: 1, xp: 0, precisao: 50, interacoes: 0, imports: 0 };
+        }
+    } catch(e) { console.error('Erro ao carregar:', e); }
+}
+
+function salvarDB() {
+    try {
+        localStorage.setItem('enside_db_v5', JSON.stringify(db));
+        atualizarTudo();
+    } catch(e) { console.error('Erro ao salvar:', e); }
+}
+
+// ============================================================
+// 📊 ATUALIZAR DASHBOARD
+// ============================================================
+function atualizarTudo() {
+    const total = db.clientes.length + db.fornecedores.length + db.motoristas.length;
+    const waTotal = [...db.clientes, ...db.fornecedores, ...db.motoristas].filter(c => c.whatsapp).length;
+
+    // Stats
+    document.getElementById('sTotal').textContent = total.toLocaleString();
+    document.getElementById('sCli').textContent = db.clientes.length.toLocaleString();
+    document.getElementById('sFor').textContent = db.fornecedores.length.toLocaleString();
+    document.getElementById('sMot').textContent = db.motoristas.length.toLocaleString();
+    document.getElementById('sWa').textContent = waTotal.toLocaleString();
+    document.getElementById('sListas').textContent = db.listas.length;
+
+    // Badges
+    document.getElementById('badgeCli').textContent = db.clientes.length;
+    document.getElementById('badgeFor').textContent = db.fornecedores.length;
+    document.getElementById('badgeMot').textContent = db.motoristas.length;
+    document.getElementById('badgeListas').textContent = db.listas.length;
+
+    // Tabela análise
+    const calcStats = arr => ({
+        wa: arr.filter(r => r.whatsapp).length,
+        comp: arr.filter(r => r.nome && r.telefone).length,
+        inc: arr.length - arr.filter(r => r.nome && r.telefone).length
+    });
+    const c = calcStats(db.clientes), f = calcStats(db.fornecedores), m = calcStats(db.motoristas);
+    document.getElementById('tblAnalise').innerHTML = `
+        <tr><td>👥 Clientes</td><td>${db.clientes.length}</td><td>${c.wa}</td><td>${c.comp}</td><td>${c.inc}</td></tr>
+        <tr><td>📦 Fornecedores</td><td>${db.fornecedores.length}</td><td>${f.wa}</td><td>${f.comp}</td><td>${f.inc}</td></tr>
+        <tr><td>🚚 Motoristas</td><td>${db.motoristas.length}</td><td>${m.wa}</td><td>${m.comp}</td><td>${m.inc}</td></tr>
+        <tr style="font-weight:bold;background:#f5f5f5"><td>TOTAL</td><td>${total}</td><td>${c.wa+f.wa+m.wa}</td><td>${c.comp+f.comp+m.comp}</td><td>${c.inc+f.inc+m.inc}</td></tr>
+    `;
+
+    // Agente
+    const nivel = Math.floor(db.agente.xp / 100) + 1;
+    db.agente.nivel = nivel;
+    const aprendizado = Math.min(10 + (db.conhecimentos.length * 5) + (db.agente.interacoes * 2) + (db.agente.imports * 3), 100);
+
+    document.getElementById('headerNivel').textContent = nivel;
+    document.getElementById('agNivel').textContent = nivel;
+    document.getElementById('agXP').textContent = db.agente.xp;
+    document.getElementById('agPrecisao').textContent = db.agente.precisao + '%';
+    document.getElementById('agInteracoes').textContent = db.agente.interacoes;
+    document.getElementById('agProgress').style.width = aprendizado + '%';
+    document.getElementById('agProgressText').textContent = `${aprendizado}% - ${aprendizado < 20 ? 'Iniciante' : aprendizado < 40 ? 'Aprendiz' : aprendizado < 60 ? 'Intermediário' : aprendizado < 80 ? 'Avançado' : 'Expert'}`;
+
+    // WhatsApp
+    document.getElementById('waConv').textContent = db.whatsapp.conversas.length;
+    document.getElementById('waMsgs').textContent = db.whatsapp.mensagens;
+    document.getElementById('waAprend').textContent = Math.floor(db.whatsapp.conversas.length * 3);
+
+    // Popular filtros de UF
+    popularFiltrosUF();
+}
+
+function popularFiltrosUF() {
+    const ufs = new Set();
+    [...db.clientes, ...db.fornecedores, ...db.motoristas].forEach(c => {
+        if (c.estado) ufs.add(c.estado.toUpperCase());
+    });
+
+    const selects = ['filtroUFCli', 'filtroUFFor', 'filtroUFMot', 'listaFiltroUF'];
+    selects.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const val = el.value;
+        el.innerHTML = '<option value="">Todos estados</option>';
+        [...ufs].sort().forEach(uf => el.innerHTML += `<option value="${uf}">${uf}</option>`);
+        el.value = val;
+    });
+}
+
+// ============================================================
+// 📤 IMPORTAÇÃO INTELIGENTE COM TRIAGEM
+// ============================================================
+function importarArquivo(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = ev => {
+        try {
+            const linhas = ev.target.result.trim().split('\n');
+            const sep = linhas[0].includes(';') ? ';' : ',';
+            const headers = linhas[0].split(sep).map(h => h.trim().toLowerCase().replace(/"/g, ''));
+
+            let stats = { novos: 0, dup: 0, erros: 0 };
+            let cats = { clientes: 0, fornecedores: 0, motoristas: 0 };
+
+            linhas.slice(1).forEach(linha => {
+                if (!linha.trim()) return;
+                try {
+                    const vals = linha.split(sep).map(v => v.trim().replace(/^"|"$/g, ''));
+                    const r = {};
+                    headers.forEach((h, i) => r[h] = vals[i] || '');
+
+                    // NORMALIZAR CAMPOS
+                    r.nome = r.nome || r.name || r.razao_social || r.empresa || r.cliente || r.fornecedor || '';
+                    r.telefone = r.telefone || r.phone || r.tel || r.fone || '';
+                    r.whatsapp = r.whatsapp || r.wa || r.celular || r.telefone || '';
+                    r.email = r.email || r.mail || r.e_mail || '';
+                    r.cidade = r.cidade || r.city || r.municipio || '';
+                    r.estado = (r.estado || r.uf || r.state || '').toUpperCase();
+                    r.setor = r.setor || r.segmento || r.sector || r.ramo || '';
+
+                    if (!r.nome || r.nome.length < 2) { stats.erros++; return; }
+
+                    // TRIAGEM INTELIGENTE
+                    const cat = detectarCategoria(r);
+                    const nomeNorm = r.nome.toLowerCase().trim();
+
+                    // Verificar duplicidade
+                    if (db[cat].some(x => (x.nome || '').toLowerCase().trim() === nomeNorm)) {
+                        stats.dup++;
+                        return;
+                    }
+
+                    r.id = Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+                    r.categoria = cat;
+                    r.dataImport = new Date().toLocaleDateString('pt-BR');
+
+                    db[cat].push(r);
+                    stats.novos++;
+                    cats[cat]++;
+                } catch(err) { stats.erros++; }
+            });
+
+            // XP para agente
+            db.agente.imports++;
+            db.agente.xp += Math.floor(stats.novos / 10) + 5;
+            db.agente.precisao = Math.min(50 + (db.agente.imports * 3), 98);
+
+            salvarDB();
+
+            document.getElementById('alertaImport').innerHTML = `
+                <div class="alert success">
+                    ✅ <strong>Importação concluída com Triagem Inteligente!</strong><br><br>
+                    📊 <strong>${stats.novos.toLocaleString()}</strong> novos registros<br>
+                    👥 ${cats.clientes} clientes | 📦 ${cats.fornecedores} fornecedores | 🚚 ${cats.motoristas} motoristas
+                    ${stats.dup > 0 ? `<br>⚠️ ${stats.dup} duplicados ignorados` : ''}
+                    ${stats.erros > 0 ? `<br>❌ ${stats.erros} linhas com erro` : ''}
+                    <br><br>🧠 Agente ganhou <strong>${Math.floor(stats.novos / 10) + 5} XP</strong>!
+                </div>
+            `;
+            e.target.value = '';
+
+            addMsgAgente(`📥 Importei ${stats.novos.toLocaleString()} contatos! 👥 ${cats.clientes} clientes, 📦 ${cats.fornecedores} fornecedores, 🚚 ${cats.motoristas} motoristas. Quer criar uma lista de transmissão?`);
+        } catch(err) {
+            document.getElementById('alertaImport').innerHTML = `<div class="alert error">❌ Erro: ${err.message}</div>`;
+        }
+    };
+    reader.readAsText(file);
+}
+
+function detectarCategoria(r) {
+    const n = (r.nome || '').toLowerCase();
+    const t = (r.tipo || r.type || r.categoria || '').toLowerCase();
+
+    // Por tipo explícito
+    if (t.includes('cliente') || t.includes('customer')) return 'clientes';
+    if (t.includes('fornecedor') || t.includes('supplier')) return 'fornecedores';
+    if (t.includes('motorista') || t.includes('frete') || t.includes('driver')) return 'motoristas';
+
+    // Por padrões no nome - TRIAGEM INTELIGENTE
+    if (/madeireira|serraria|marcenaria|carpintaria|movelaria|fabrica|industria/i.test(n)) return 'fornecedores';
+    if (/frete|motorista|transportadora|caminhao|caminhão|carreta|truck|transp/i.test(n)) return 'motoristas';
+
+    return 'clientes';
+}
+
+// ============================================================
+// ➕ CADASTRO MANUAL
+// ============================================================
+function salvarCadastro() {
+    const tipo = document.getElementById('cadTipo').value;
+    const nome = document.getElementById('cadNome').value.trim();
+
+    if (!nome) {
+        document.getElementById('alertaCad').innerHTML = '<div class="alert error">❌ Nome obrigatório!</div>';
+        return;
+    }
+
+    if (db[tipo].some(x => (x.nome || '').toLowerCase() === nome.toLowerCase())) {
+        document.getElementById('alertaCad').innerHTML = '<div class="alert error">❌ Já existe!</div>';
+        return;
+    }
+
+    db[tipo].push({
+        id: Date.now() + '-' + Math.random().toString(36).substr(2, 9),
+        nome,
+        telefone: document.getElementById('cadTel').value.trim(),
+        whatsapp: document.getElementById('cadWa').value.trim(),
+        email: document.getElementById('cadEmail').value.trim(),
+        cidade: document.getElementById('cadCidade').value.trim(),
+        estado: document.getElementById('cadUF').value.trim().toUpperCase(),
+        setor: document.getElementById('cadSetor').value,
+        categoria: tipo,
+        dataImport: new Date().toLocaleDateString('pt-BR')
+    });
+
+    db.agente.xp += 5;
+    salvarDB();
+
+    ['cadNome', 'cadTel', 'cadWa', 'cadEmail', 'cadCidade', 'cadUF'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('cadSetor').value = '';
+    document.getElementById('alertaCad').innerHTML = '<div class="alert success">✅ Salvo!</div>';
+}
+
+// ============================================================
+// 📋 RENDERIZAR LISTAS DE CONTATOS
+// ============================================================
+function renderLista(arr, elId, icon, badgeClass) {
+    const el = document.getElementById(elId);
+    if (!arr.length) { el.innerHTML = '<div class="alert info">Nenhum registro</div>'; return; }
+
+    el.innerHTML = arr.slice(0, 100).map(c => `
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">${icon} ${c.nome}</div>
+                ${c.setor ? `<span class="card-badge ${badgeClass}">${c.setor}</span>` : ''}
+            </div>
+            ${c.telefone ? `<div class="card-field">☎️ ${c.telefone}</div>` : ''}
+            ${c.whatsapp ? `<div class="card-field">📱 <a href="https://wa.me/55${c.whatsapp.replace(/\D/g, '')}" target="_blank">${c.whatsapp}</a></div>` : ''}
+            ${c.cidade ? `<div class="card-field">📍 ${c.cidade}${c.estado ? ' - ' + c.estado : ''}</div>` : ''}
+            <button onclick="excluir('${c.categoria}','${c.id}')" class="btn-small btn-danger" style="margin-top:8px;">🗑️</button>
+        </div>
+    `).join('');
+
+    if (arr.length > 100) el.innerHTML += `<div class="alert info">Mostrando 100 de ${arr.length.toLocaleString()}</div>`;
+}
+
+function filtrarClientes() {
+    const busca = document.getElementById('buscaCli').value.toLowerCase();
+    const setor = document.getElementById('filtroSetorCli').value;
+    const uf = document.getElementById('filtroUFCli').value;
+    const filtered = db.clientes.filter(c =>
+        (!busca || c.nome.toLowerCase().includes(busca) || (c.telefone || '').includes(busca) || (c.cidade || '').toLowerCase().includes(busca)) &&
+        (!setor || c.setor === setor) && (!uf || c.estado === uf)
+    );
+    renderLista(filtered, 'listaCli', '👤', 'badge-cliente');
+}
+
+function filtrarFornecedores() {
+    const busca = document.getElementById('buscaFor').value.toLowerCase();
+    const uf = document.getElementById('filtroUFFor').value;
+    const filtered = db.fornecedores.filter(c =>
+        (!busca || c.nome.toLowerCase().includes(busca) || (c.telefone || '').includes(busca)) && (!uf || c.estado === uf)
+    );
+    renderLista(filtered, 'listaFor', '📦', 'badge-fornecedor');
+}
+
+function filtrarMotoristas() {
+    const busca = document.getElementById('buscaMot').value.toLowerCase();
+    const uf = document.getElementById('filtroUFMot').value;
+    const filtered = db.motoristas.filter(c =>
+        (!busca || c.nome.toLowerCase().includes(busca) || (c.telefone || '').includes(busca)) && (!uf || c.estado === uf)
+    );
+    renderLista(filtered, 'listaMot', '🚚', 'badge-motorista');
+}
+
+function excluir(cat, id) {
+    if (!confirm('Excluir?')) return;
+    db[cat] = db[cat].filter(c => c.id !== id);
+    salvarDB();
+    if (cat === 'clientes') filtrarClientes();
+    else if (cat === 'fornecedores') filtrarFornecedores();
+    else filtrarMotoristas();
+}
+
+// ============================================================
+// 📋 LISTAS DE TRANSMISSÃO
+// ============================================================
+function previewLista() {
+    const tipo = document.getElementById('listaFiltroTipo').value;
+    const setor = document.getElementById('listaFiltroSetor').value;
+    const uf = document.getElementById('listaFiltroUF').value;
+    const cidade = document.getElementById('listaFiltroCidade').value.toLowerCase();
+    const limite = parseInt(document.getElementById('listaLimite').value) || 256;
+
+    let contatos = [];
+    if (tipo) contatos = db[tipo].filter(c => c.whatsapp);
+    else contatos = [...db.clientes, ...db.fornecedores, ...db.motoristas].filter(c => c.whatsapp);
+
+    contatos = contatos.filter(c =>
+        (!setor || c.setor === setor) &&
+        (!uf || c.estado === uf) &&
+        (!cidade || (c.cidade || '').toLowerCase().includes(cidade))
+    );
+
+    const numListas = Math.ceil(Math.min(contatos.length, limite) / 256);
+    const el = document.getElementById('previewListaInfo');
+    el.style.display = 'block';
+    el.innerHTML = `📊 <strong>${contatos.length.toLocaleString()}</strong> contatos com WhatsApp encontrados<br>
+        📱 Serão criadas <strong>${numListas}</strong> lista(s) de transmissão (máx 256 cada)`;
+}
+
+function criarLista() {
+    const nome = document.getElementById('listaNome').value.trim();
+    if (!nome) { document.getElementById('alertaLista').innerHTML = '<div class="alert error">❌ Nome obrigatório!</div>'; return; }
+
+    const tipo = document.getElementById('listaFiltroTipo').value;
+    const setor = document.getElementById('listaFiltroSetor').value;
+    const uf = document.getElementById('listaFiltroUF').value;
+    const cidade = document.getElementById('listaFiltroCidade').value.toLowerCase();
+    const limite = parseInt(document.getElementById('listaLimite').value) || 256;
+
+    let contatos = [];
+    if (tipo) contatos = db[tipo].filter(c => c.whatsapp);
+    else contatos = [...db.clientes, ...db.fornecedores, ...db.motoristas].filter(c => c.whatsapp);
+
+    contatos = contatos.filter(c =>
+        (!setor || c.setor === setor) && (!uf || c.estado === uf) && (!cidade || (c.cidade || '').toLowerCase().includes(cidade))
+    ).slice(0, limite);
+
+    if (!contatos.length) { document.getElementById('alertaLista').innerHTML = '<div class="alert error">❌ Nenhum contato!</div>'; return; }
+
+    // Dividir em listas de 256
+    const chunks = [];
+    for (let i = 0; i < contatos.length; i += 256) chunks.push(contatos.slice(i, i + 256));
+
+    chunks.forEach((chunk, idx) => {
+        db.listas.push({
+            id: Date.now() + '-' + Math.random().toString(36).substr(2, 9),
+            nome: chunks.length > 1 ? `${nome} (${idx + 1}/${chunks.length})` : nome,
+            filtros: { tipo, setor, uf, cidade },
+            contatos: chunk.map(c => ({ id: c.id, nome: c.nome, whatsapp: c.whatsapp })),
+            total: chunk.length,
+            criado: new Date().toLocaleDateString('pt-BR')
+        });
+    });
+
+    db.agente.xp += 20;
+    salvarDB();
+
+    document.getElementById('alertaLista').innerHTML = `<div class="alert success">✅ ${chunks.length} lista(s) criada(s) com ${contatos.length} contatos!</div>`;
+    document.getElementById('listaNome').value = '';
+    document.getElementById('previewListaInfo').style.display = 'none';
+
+    addMsgAgente(`✅ Criei ${chunks.length} lista(s) "${nome}" com ${contatos.length} contatos. Posso ajudar com mais alguma coisa?`);
+    renderMinhasListas();
+}
+
+function renderMinhasListas() {
+    const el = document.getElementById('minhasListas');
+    if (!db.listas.length) { el.innerHTML = '<div class="alert info">Nenhuma lista criada</div>'; return; }
+
+    el.innerHTML = db.listas.map(l => `
+        <div class="list-item">
+            <div class="list-info">
+                <h4>📋 ${l.nome}</h4>
+                <p>Criada: ${l.criado} | ${l.filtros.tipo || 'Todos'} ${l.filtros.uf || ''} ${l.filtros.setor || ''}</p>
+            </div>
+            <div style="display:flex;gap:10px;align-items:center;">
+                <span class="list-count">${l.total}</span>
+                <button onclick="exportarLista('${l.id}')" class="btn-small btn-whatsapp">📱</button>
+                <button onclick="excluirLista('${l.id}')" class="btn-small btn-danger">🗑️</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function exportarLista(id) {
+    const lista = db.listas.find(l => l.id === id);
+    if (!lista) return;
+    let csv = 'Nome,WhatsApp\n';
+    lista.contatos.forEach(c => csv += `"${c.nome}","${c.whatsapp}"\n`);
+    download(csv, `lista_${lista.nome.replace(/[^a-zA-Z0-9]/g, '_')}.csv`);
+}
+
+function excluirLista(id) {
+    if (!confirm('Excluir lista?')) return;
+    db.listas = db.listas.filter(l => l.id !== id);
+    salvarDB();
+    renderMinhasListas();
+}
+
+// ============================================================
+// 🧠 AGENTE IA - CHAT
+// ============================================================
+function enviarMsg() {
+    const input = document.getElementById('chatIn');
+    const msg = input.value.trim();
+    if (!msg) return;
+
+    const chatEl = document.getElementById('chatMsgs');
+    chatEl.innerHTML += `<div class="chat-msg user">${msg}<div class="time">${new Date().toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'})}</div></div>`;
+    input.value = '';
+
+    db.agente.interacoes++;
+    db.agente.xp += 2;
+
+    document.getElementById('agTyping').style.display = 'inline';
+
+    setTimeout(() => {
+        document.getElementById('agTyping').style.display = 'none';
+        const resp = processarPergunta(msg);
+        chatEl.innerHTML += `<div class="chat-msg agent">${resp}<div class="time">${new Date().toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'})}</div></div>`;
+        chatEl.scrollTop = chatEl.scrollHeight;
+        salvarDB();
+    }, 400 + Math.random() * 800);
+}
+
+function addMsgAgente(msg) {
+    const chatEl = document.getElementById('chatMsgs');
+    chatEl.innerHTML += `<div class="chat-msg agent">${msg}<div class="time">${new Date().toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'})}</div></div>`;
+    chatEl.scrollTop = chatEl.scrollHeight;
+}
+
+function processarPergunta(p) {
+    const q = p.toLowerCase();
+    const total = db.clientes.length + db.fornecedores.length + db.motoristas.length;
+
+    // Saudações
+    if (/^(oi|olá|ola|hey|e ai|bom dia|boa tarde|boa noite)/.test(q)) {
+        return `👋 Olá Anderson! Tenho ${total.toLocaleString()} contatos e ${db.listas.length} listas. Como posso ajudar?`;
+    }
+
+    // Contagens
+    if (q.includes('quantos clientes')) return `📊 <strong>${db.clientes.length.toLocaleString()}</strong> clientes`;
+    if (q.includes('quantos fornecedores')) return `📦 <strong>${db.fornecedores.length.toLocaleString()}</strong> fornecedores`;
+    if (q.includes('quantos motoristas')) return `🚚 <strong>${db.motoristas.length.toLocaleString()}</strong> motoristas`;
+    if (q.includes('quantas listas')) return `📋 <strong>${db.listas.length}</strong> listas de transmissão`;
+
+    // Resumo
+    if (q.includes('resumo') || q.includes('status') || q.includes('total')) {
+        const waTotal = [...db.clientes, ...db.fornecedores, ...db.motoristas].filter(c => c.whatsapp).length;
+        return `📊 <strong>Resumo:</strong><br>
+            👥 ${db.clientes.length.toLocaleString()} clientes<br>
+            📦 ${db.fornecedores.length.toLocaleString()} fornecedores<br>
+            🚚 ${db.motoristas.length.toLocaleString()} motoristas<br>
+            📱 ${waTotal.toLocaleString()} com WhatsApp<br>
+            📋 ${db.listas.length} listas<br>
+            📚 ${db.conhecimentos.length} conhecimentos<br>
+            ✅ ${db.tarefas.filter(t => !t.done).length} tarefas pendentes`;
+    }
+
+    // Buscar
+    if (q.includes('buscar') || q.includes('procurar')) {
+        const termo = q.replace(/buscar|procurar|encontrar/gi, '').trim();
+        if (termo.length >= 2) {
+            const todos = [...db.clientes, ...db.fornecedores, ...db.motoristas];
+            const res = todos.filter(c => c.nome.toLowerCase().includes(termo));
+            if (res.length) return `🔍 <strong>${res.length}</strong> resultado(s):<br>` + res.slice(0, 5).map(c => `• ${c.nome}${c.telefone ? ' - ' + c.telefone : ''}`).join('<br>');
+            return `❌ Nada encontrado para "${termo}"`;
+        }
+    }
+
+    // Por estado
+    const ufs = ['sp', 'rj', 'mg', 'ba', 'pr', 'sc', 'rs', 'go', 'df', 'ce', 'pe', 'pa', 'am', 'mt', 'ms'];
+    for (const uf of ufs) {
+        if (q.includes(`de ${uf}`) || q.includes(`do ${uf}`)) {
+            const contatos = [...db.clientes, ...db.fornecedores, ...db.motoristas].filter(c => c.estado && c.estado.toLowerCase() === uf);
+            if (contatos.length) return `📍 <strong>${contatos.length}</strong> contatos em ${uf.toUpperCase()}:<br>` + contatos.slice(0, 6).map(c => `• ${c.nome}`).join('<br>');
+            return `❌ Nenhum contato em ${uf.toUpperCase()}`;
+        }
+    }
+
+    // Dica
+    if (q.includes('dica') || q.includes('sugest')) {
+        const dicas = [
+            'Organize contatos por setor para listas mais efetivas!',
+            'Adicione conhecimentos sobre preços para eu aprender.',
+            'Complete tarefas para ganhar XP e subir de nível!',
+            'Use filtros por estado para segmentar listas.',
+            'Faça backup exportando para JSON regularmente.'
+        ];
+        return `💡 <strong>Dica:</strong> ${dicas[Math.floor(Math.random() * dicas.length)]}`;
+    }
+
+    // Análise
+    if (q.includes('análise') || q.includes('analise') || q.includes('insight')) {
+        const waTotal = [...db.clientes, ...db.fornecedores, ...db.motoristas].filter(c => c.whatsapp).length;
+        const perc = total > 0 ? Math.round((waTotal / total) * 100) : 0;
+        return `📊 <strong>Análise:</strong><br>
+            • ${perc}% têm WhatsApp<br>
+            • Maior: ${db.clientes.length >= db.fornecedores.length && db.clientes.length >= db.motoristas.length ? 'Clientes' : db.fornecedores.length >= db.motoristas.length ? 'Fornecedores' : 'Motoristas'}<br>
+            • ${db.tarefas.filter(t => !t.done).length} tarefas pendentes<br>
+            💡 ${perc < 50 ? 'Adicione mais WhatsApps!' : 'Boa cobertura de WhatsApp!'}`;
+    }
+
+    // Conhecimentos
+    const conh = db.conhecimentos.find(c => c.titulo.toLowerCase().includes(q) || c.conteudo.toLowerCase().includes(q) || (c.tags || []).some(t => q.includes(t.toLowerCase())));
+    if (conh) return `📚 <strong>${conh.titulo}</strong><br>${conh.conteudo}`;
+
+    // Ajuda
+    if (q.includes('ajuda') || q.includes('help') || q.includes('comandos')) {
+        return `🤖 <strong>Comandos:</strong><br>
+            📊 "resumo" - Status geral<br>
+            👥 "quantos clientes?" - Contagens<br>
+            🔍 "buscar [nome]" - Procurar<br>
+            📍 "clientes de SP" - Por estado<br>
+            📊 "análise" - Insights<br>
+            💡 "dica" - Sugestões<br>
+            📚 [termo] - Buscar conhecimentos`;
+    }
+
+    return `🤔 Não entendi. Tente "resumo", "quantos clientes?", "buscar [nome]" ou "ajuda"`;
+}
+
+// ============================================================
+// ✅ TAREFAS
+// ============================================================
+function addTarefa() {
+    const texto = document.getElementById('novaTarefa').value.trim();
+    if (!texto) return;
+
+    db.tarefas.push({
+        id: Date.now(),
+        texto,
+        prioridade: document.getElementById('tarefaPrior').value,
+        done: false,
+        criado: new Date().toLocaleDateString('pt-BR')
+    });
+    db.agente.xp += 3;
+    salvarDB();
+    document.getElementById('novaTarefa').value = '';
+    renderTarefas('todas');
+}
+
+function toggleTarefa(id) {
+    const t = db.tarefas.find(x => x.id === id);
+    if (t) { t.done = !t.done; if (t.done) db.agente.xp += 10; salvarDB(); renderTarefas('todas'); }
+}
+
+function delTarefa(id) {
+    db.tarefas = db.tarefas.filter(t => t.id !== id);
+    salvarDB();
+    renderTarefas('todas');
+}
+
+function filtroTarefas(tipo, btn) {
+    document.querySelectorAll('#tarefas .inner-tab').forEach(t => t.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    renderTarefas(tipo);
+}
+
+function renderTarefas(tipo) {
+    let tarefas = db.tarefas;
+    if (tipo === 'pendentes') tarefas = tarefas.filter(t => !t.done);
+    if (tipo === 'concluidas') tarefas = tarefas.filter(t => t.done);
+
+    const ordem = { alta: 0, media: 1, baixa: 2 };
+    tarefas.sort((a, b) => a.done !== b.done ? (a.done ? 1 : -1) : ordem[a.prioridade] - ordem[b.prioridade]);
+
+    const el = document.getElementById('listaTarefas');
+    if (!tarefas.length) { el.innerHTML = '<div class="alert info">Nenhuma tarefa</div>'; return; }
+
+    el.innerHTML = tarefas.map(t => `
+        <div class="task-item">
+            <div class="task-check ${t.done ? 'done' : ''}" onclick="toggleTarefa(${t.id})">${t.done ? '✓' : ''}</div>
+            <div class="task-content ${t.done ? 'done' : ''}">${t.texto}</div>
+            <span class="priority-${t.prioridade}">${t.prioridade}</span>
+            <button onclick="delTarefa(${t.id})" class="btn-small btn-danger">🗑️</button>
+        </div>
+    `).join('');
+
+    // Dica
+    const pendentes = db.tarefas.filter(t => !t.done).length;
+    document.getElementById('dicaTarefa').innerHTML = pendentes > 5
+        ? '🤖 Muitas tarefas pendentes! Foque nas de alta prioridade primeiro.'
+        : pendentes > 0 ? `🤖 Você tem ${pendentes} tarefa(s) pendente(s). Complete para ganhar XP!`
+        : '🤖 Parabéns! Todas as tarefas concluídas!';
+}
+
+// ============================================================
+// 📚 CONHECIMENTO
+// ============================================================
+function salvarConhecimento() {
+    const titulo = document.getElementById('conhTitulo').value.trim();
+    const conteudo = document.getElementById('conhConteudo').value.trim();
+    if (!titulo || !conteudo) { document.getElementById('alertaConh').innerHTML = '<div class="alert error">❌ Título e conteúdo obrigatórios!</div>'; return; }
+
+    db.conhecimentos.push({
+        id: Date.now(),
+        titulo,
+        categoria: document.getElementById('conhCat').value,
+        conteudo,
+        tags: document.getElementById('conhTags').value.split(',').map(t => t.trim()).filter(t => t),
+        criado: new Date().toLocaleDateString('pt-BR')
+    });
+    db.agente.xp += 15;
+    salvarDB();
+
+    document.getElementById('conhTitulo').value = '';
+    document.getElementById('conhConteudo').value = '';
+    document.getElementById('conhTags').value = '';
+    document.getElementById('alertaConh').innerHTML = '<div class="alert success">✅ Salvo! Agente aprendeu.</div>';
+    renderConhecimentos();
+    addMsgAgente(`📚 Aprendi sobre "${titulo}"! Obrigado por me ensinar.`);
+}
+
+function renderConhecimentos() {
+    const el = document.getElementById('listaConh');
+    if (!db.conhecimentos.length) { el.innerHTML = '<div class="alert info">Nenhum conhecimento. Ensine o agente!</div>'; return; }
+
+    el.innerHTML = db.conhecimentos.map(c => `
+        <div class="knowledge-card">
+            <h4>📖 ${c.titulo}</h4>
+            <p>${c.conteudo}</p>
+            <div class="knowledge-tags">
+                <span class="knowledge-tag">${c.categoria}</span>
+                ${(c.tags || []).map(t => `<span class="knowledge-tag" style="background:var(--secondary)">${t}</span>`).join('')}
+            </div>
+            <button onclick="delConhecimento(${c.id})" class="btn-small btn-danger" style="margin-top:10px;">🗑️</button>
+        </div>
+    `).join('');
+}
+
+function delConhecimento(id) {
+    if (!confirm('Excluir?')) return;
+    db.conhecimentos = db.conhecimentos.filter(c => c.id !== id);
+    salvarDB();
+    renderConhecimentos();
+}
+
+// ============================================================
+// 📱 WHATSAPP
+// ============================================================
+function salvarWebhook() {
+    db.whatsapp.webhook = document.getElementById('waWebhook').value;
+    salvarDB();
+    alert('✅ Webhook salvo!');
+}
+
+function simularConversa() {
+    const nomes = ['João Madeireira', 'Maria Construções', 'Carlos Frete', 'Pedro Móveis', 'Ana Exportadora'];
+    const msgs = ['Tem Pinus seco?', 'Qual preço do eucalipto?', 'Preciso de frete para Campinas', 'Entrega semana que vem?', 'Tem certificação FSC?'];
+
+    const conv = {
+        id: Date.now(),
+        contato: nomes[Math.floor(Math.random() * nomes.length)],
+        msg: msgs[Math.floor(Math.random() * msgs.length)],
+        hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+    };
+
+    db.whatsapp.conversas.push(conv);
+    db.whatsapp.mensagens++;
+    db.agente.xp += 5;
+    salvarDB();
+
+    renderConversas();
+    addMsgAgente(`📱 Nova conversa de ${conv.contato}: "${conv.msg}" - Posso ajudar a responder!`);
+}
+
+function renderConversas() {
+    const el = document.getElementById('waConversas');
+    if (!db.whatsapp.conversas.length) { el.innerHTML = '<div class="alert info">Nenhuma conversa ainda</div>'; return; }
+
+    el.innerHTML = db.whatsapp.conversas.slice(-5).reverse().map(c => `
+        <div style="background:#e5ddd5;padding:12px;border-radius:10px;margin-bottom:10px;">
+            <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+                <strong style="color:var(--whatsapp);">👤 ${c.contato}</strong>
+                <span style="color:#666;font-size:0.8em;">${c.hora}</span>
+            </div>
+            <div style="background:white;padding:8px 12px;border-radius:8px;max-width:80%;">${c.msg}</div>
+        </div>
+    `).join('');
+}
+
+// ============================================================
+// 💾 EXPORTAÇÃO
+// ============================================================
+function exportCSV(cat) {
+    if (!db[cat].length) { alert('Vazio!'); return; }
+    let csv = 'Nome,Telefone,WhatsApp,Email,Cidade,Estado,Setor\n';
+    db[cat].forEach(c => csv += `"${c.nome || ''}","${c.telefone || ''}","${c.whatsapp || ''}","${c.email || ''}","${c.cidade || ''}","${c.estado || ''}","${c.setor || ''}"\n`);
+    download(csv, `${cat}_enside.csv`);
+}
+
+function exportJSON() { download(JSON.stringify(db, null, 2), 'enside_backup.json'); }
+
+function exportWhatsApp() {
+    const todos = [...db.clientes, ...db.fornecedores, ...db.motoristas].filter(c => c.whatsapp);
+    if (!todos.length) { alert('Nenhum WhatsApp!'); return; }
+    let csv = 'Nome,WhatsApp\n';
+    todos.forEach(c => csv += `"${c.nome}","${c.whatsapp}"\n`);
+    download(csv, 'whatsapp_todos.csv');
+}
+
+function exportListas() {
+    if (!db.listas.length) { alert('Nenhuma lista!'); return; }
+    download(JSON.stringify(db.listas, null, 2), 'listas_transmissao.json');
+}
+
+function download(content, filename) {
+    const a = document.createElement('a');
+    a.href = 'data:text/plain;charset=utf-8,' + encodeURIComponent(content);
+    a.download = filename;
+    a.click();
+}
+
+function limparTudo() {
+    if (!confirm('⚠️ APAGAR TUDO?')) return;
+    if (!confirm('🚨 CERTEZA ABSOLUTA?')) return;
+    db = { clientes: [], fornecedores: [], motoristas: [], listas: [], tarefas: [], conhecimentos: [], whatsapp: { webhook: '', conversas: [], mensagens: 0 }, agente: { nivel: 1, xp: 0, precisao: 50, interacoes: 0, imports: 0 } };
+    salvarDB();
+    location.reload();
+}
+
+// ============================================================
+// 🧭 NAVEGAÇÃO
+// ============================================================
+function abrirAba(id, btn) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    btn.classList.add('active');
+
+    if (id === 'clientes') filtrarClientes();
+    if (id === 'fornecedores') filtrarFornecedores();
+    if (id === 'motoristas') filtrarMotoristas();
+    if (id === 'listas') renderMinhasListas();
+    if (id === 'tarefas') renderTarefas('todas');
+    if (id === 'aprendizado') renderConhecimentos();
+    if (id === 'whatsapp') renderConversas();
+}
+
+function abrirInner(id, btn) {
+    const parent = btn.closest('.panel');
+    parent.querySelectorAll('.inner-content').forEach(el => el.style.display = 'none');
+    parent.querySelectorAll('.inner-tab').forEach(el => el.classList.remove('active'));
+    document.getElementById(id).style.display = 'block';
+    btn.classList.add('active');
+}
+
+// ============================================================
+// 🚀 INICIALIZAÇÃO
+// ============================================================
+carregarDB();
+atualizarTudo();
+renderTarefas('todas');
+renderConhecimentos();
+renderMinhasListas();
+renderConversas();
+
+console.log('🗄️ ENSIDE DATABASE v5 - EVOLUÍDO carregado!');
+console.log('📊 Contatos:', db.clientes.length + db.fornecedores.length + db.motoristas.length);
+</script>
+</body>
+</html>
