@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🗄️ ENSIDE DATABASE v6.12 - Sistema Integrado Completo</title>
+    <title>🗄️ ENSIDE DATABASE v6.15 - Sistema Ultra Completo + Google Sheets</title>
     <style>
         *{margin:0;padding:0;box-sizing:border-box}
         :root{--primary:#1a5f2a;--secondary:#2e8b3e;--success:#28a745;--danger:#dc3545;--warning:#ffc107;--whatsapp:#25D366;--dark:#2c3e50}
@@ -121,12 +121,12 @@
 <div class="container">
     <div class="panel">
         <div class="header">
-            <h1>🗄️ ENSIDE DATABASE v6.12</h1>
-            <p><strong>Enside Madeiras</strong> - Anderson Enside | Sistema Integrado 50 Campos + IA + WhatsApp</p>
+            <h1>🗄️ ENSIDE DATABASE v6.15</h1>
+            <p><strong>Enside Madeiras</strong> - Anderson Enside | Sistema Ultra Completo + Triagem IA + Google Sheets</p>
             <div style="margin-top:10px;">
                 <div class="whatsapp-vinculado" onclick="abrirAba('whatsapp',document.querySelector('[onclick*=whatsapp]'))">📱 <span id="waVinculadoHeader">(18) 99654-0492</span></div>
                 <div class="status"><div class="pulse"></div><span>🧠 Agente Nível <span id="headerNivel">1</span></span></div>
-                <span class="versao-badge" style="margin-left:10px;">v6.12 INTEGRADO</span>
+                <span class="versao-badge" style="margin-left:10px;">v6.15 ULTRA</span>
             </div>
         </div>
     </div>
@@ -142,6 +142,7 @@
             <button class="tab-btn" onclick="abrirAba('whatsapp',this)">📱 WhatsApp</button>
             <button class="tab-btn" onclick="abrirAba('aprendizado',this)">📚 Conhecimentos <span class="badge" id="badgeConh">0</span></button>
             <button class="tab-btn" onclick="abrirAba('exportar',this)">💾 Exportar</button>
+            <button class="tab-btn" onclick="abrirAba('sheets',this)">📊 Google Sheets</button>
         </div>
     </div>
 
@@ -337,7 +338,7 @@
 
             <div class="chat-box">
                 <div class="chat-header">
-                    <span>🤖 Enside Agent v6.12 | 📱 <span id="chatWaNum">(18) 99654-0492</span></span>
+                    <span>🤖 Enside Agent v6.15 | 📱 <span id="chatWaNum">(18) 99654-0492</span></span>
                     <span id="agTyping" style="display:none;font-size:0.9em;">digitando...</span>
                 </div>
                 <div class="chat-messages" id="chatMsgs"></div>
@@ -428,6 +429,56 @@
             <button onclick="limparTudo()" class="btn-danger btn-full">🗑️ Limpar Banco</button>
         </div>
     </div>
+
+    <!-- GOOGLE SHEETS -->
+    <div id="sheets" class="tab-content">
+        <div class="panel">
+            <div class="section-title">📊 Integração Google Sheets</div>
+
+            <div class="alert info">
+                📋 <strong>Configure a sincronização com Google Sheets</strong><br>
+                Os contatos serão ADICIONADOS (não substituídos) na planilha.
+            </div>
+
+            <div class="form-section">
+                <h4>⚙️ Configuração</h4>
+                <div class="form-group">
+                    <label>ID da Planilha Google *</label>
+                    <input type="text" id="sheetsId" placeholder="1NJRMB-pgEFS0MjtKrh2mhqPN6apkDwwJMAPOCejLX8Y">
+                </div>
+                <div class="form-group">
+                    <label>URL do Web App (Google Apps Script) *</label>
+                    <input type="text" id="sheetsWebApp" placeholder="https://script.google.com/macros/s/...">
+                </div>
+                <button onclick="salvarConfigSheets()" class="btn-success btn-full">💾 Salvar Configuração</button>
+            </div>
+
+            <div class="form-section" style="margin-top:20px;">
+                <h4>🔄 Sincronizar Contatos</h4>
+                <p style="color:#666;margin-bottom:15px;">Enviar contatos do sistema para as abas da planilha Google Sheets.</p>
+
+                <div class="form-row">
+                    <button onclick="sincronizarSheets('motoristas')" class="btn-success btn-full">🚚 Enviar Motoristas</button>
+                    <button onclick="sincronizarSheets('fornecedores')" class="btn-warning btn-full">📦 Enviar Fornecedores</button>
+                    <button onclick="sincronizarSheets('clientes')" class="btn-full">👥 Enviar Clientes</button>
+                </div>
+                <button onclick="sincronizarTodosSheets()" class="btn-whatsapp btn-full" style="margin-top:10px;">🔄 Sincronizar TODOS</button>
+
+                <div id="sheetsStatus" style="margin-top:15px;"></div>
+            </div>
+
+            <div class="form-section" style="margin-top:20px;">
+                <h4>📥 Importar da Planilha</h4>
+                <p style="color:#666;margin-bottom:15px;">Buscar novos contatos das abas da planilha Google Sheets.</p>
+                <button onclick="importarDeSheets()" class="btn-full">📥 Importar Novos Contatos</button>
+            </div>
+
+            <div class="alert warning" style="margin-top:20px;">
+                ⚠️ <strong>Importante:</strong> Configure o Google Apps Script com o código correto para que a sincronização funcione.
+                A planilha deve ter as abas: <strong>Motoristas</strong>, <strong>Fornecedores</strong>, <strong>Clientes</strong>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -455,8 +506,9 @@ let db = {
         historico: []
     },
     config: {
-        versao: '6.12.0',
+        versao: '6.15.0',
         planilhaId: '1NJRMB-pgEFS0MjtKrh2mhqPN6apkDwwJMAPOCejLX8Y',
+        webAppUrl: 'https://script.google.com/macros/s/AKfycbzG4z5Jt3I35gYUc76eNdP7MMaSFJIfqjI2QjktcCVIu3saV_SJCgrpila9Zg0MaQ3V/exec',
         migrado: false
     }
 };
@@ -757,30 +809,134 @@ function importarArquivo(e) {
     reader.readAsText(file);
 }
 
+// ==================== TRIAGEM INTELIGENTE COM IA ====================
+const PATTERNS_MOTORISTAS = [
+    // Tipos de veículo
+    /\b(truck|trucado|carreta|bitrem|rodotrem|toco|vuc|3\/4|bi.?trem)\b/i,
+    /\b(ls|mercedes|volvo|scania|iveco|daf|man)\b/i,
+    // Profissão/Função
+    /\b(motorista|caminhoneiro|frete|freteiro|transportador|agregado|autônomo)\b/i,
+    /\b(transporte|logist|entrega|coleta)\b/i,
+    // Tipos de carga específicos de transporte
+    /\b(graneleiro|sider|carga|carroceria)\b/i
+];
+
+const PATTERNS_FORNECEDORES = [
+    // Indústria madeireira
+    /\b(madeireira|serraria|serralheria|laminadora|compensado)\b/i,
+    /\b(fabrica|fábrica|industria|indústria|produt|manufat)\b/i,
+    // Tipos de madeira
+    /\b(pinus|eucalipto|pinho|cedro|mogno|mdf|osb|mdp|hdf)\b/i,
+    // Funções de fornecimento
+    /\b(fornece|distribui|atacad|revend|export)\b/i,
+    // Locais específicos
+    /\b(deposito|depósito|armazém|armazem|estoque)\b/i
+];
+
+const PATTERNS_CLIENTES = [
+    // Tipos de cliente
+    /\b(moveis|móveis|marcenaria|carpintaria|construt|construç)\b/i,
+    /\b(obra|projeto|arquitet|design|decoraç|loja)\b/i,
+    // Comportamento de compra
+    /\b(compra|cliente|consumidor|pedido|encomenda)\b/i
+];
+
+function classificarContato(nome, tags, fonte) {
+    const texto = (nome + ' ' + (tags || '') + ' ' + (fonte || '')).toLowerCase();
+
+    let scores = { motoristas: 0, fornecedores: 0, clientes: 0 };
+
+    // Verificar padrões de motorista
+    PATTERNS_MOTORISTAS.forEach(p => {
+        if (p.test(texto)) scores.motoristas += 10;
+    });
+
+    // Verificar padrões de fornecedor
+    PATTERNS_FORNECEDORES.forEach(p => {
+        if (p.test(texto)) scores.fornecedores += 10;
+    });
+
+    // Verificar padrões de cliente
+    PATTERNS_CLIENTES.forEach(p => {
+        if (p.test(texto)) scores.clientes += 10;
+    });
+
+    // Aprender com histórico do agente
+    if (db.agente.historico && db.agente.historico.length > 0) {
+        db.agente.historico.forEach(h => {
+            if (texto.includes(h.palavra)) {
+                scores[h.categoria] += 5;
+            }
+        });
+    }
+
+    // Determinar categoria com maior score
+    let categoria = 'clientes';
+    let maxScore = scores.clientes;
+
+    if (scores.motoristas > maxScore) {
+        categoria = 'motoristas';
+        maxScore = scores.motoristas;
+    }
+    if (scores.fornecedores > maxScore) {
+        categoria = 'fornecedores';
+        maxScore = scores.fornecedores;
+    }
+
+    // Registrar aprendizado se score alto
+    if (maxScore >= 10) {
+        const palavras = texto.split(/\s+/).filter(p => p.length > 3);
+        palavras.forEach(palavra => {
+            const jaExiste = db.agente.historico?.some(h => h.palavra === palavra && h.categoria === categoria);
+            if (!jaExiste && PATTERNS_MOTORISTAS.some(p => p.test(palavra)) ||
+                PATTERNS_FORNECEDORES.some(p => p.test(palavra))) {
+                if (!db.agente.historico) db.agente.historico = [];
+                db.agente.historico.push({ palavra, categoria, count: 1 });
+            }
+        });
+    }
+
+    return { categoria, confianca: maxScore };
+}
+
 function confirmarImportacao() {
     if (!dadosPendentes) return;
 
     let count = 0;
+    let stats = { motoristas: 0, fornecedores: 0, clientes: 0 };
+
     dadosPendentes.forEach(r => {
-        const nome = r['Nome Completo'] || r.nome || r.Nome || '';
+        // Suporte para múltiplos formatos (incluindo Callbell)
+        const nome = r['Nome Completo'] || r.nome || r.Nome || r.name || '';
         if (!nome) return;
 
-        // Triagem inteligente
-        const nomeL = nome.toLowerCase();
-        let categoria = 'clientes';
-        if (/frete|motorista|transporta|caminhao|carreta|truck|logist/i.test(nomeL)) categoria = 'motoristas';
-        else if (/madeireira|serraria|fabrica|industria|fornece|produt/i.test(nomeL)) categoria = 'fornecedores';
+        // Extrair telefone de diferentes formatos
+        const telefone = r['WhatsApp'] || r.whatsapp || r.telefone ||
+                        r.phone_number || r.phone || r['Telefone Corrigido'] || '';
+
+        // Extrair tags (Callbell)
+        const tags = r.tags || r.Tags || '';
+        const fonte = r.source || r.origem || '';
+
+        // Triagem inteligente com IA
+        const { categoria, confianca } = classificarContato(nome, tags, fonte);
 
         const contato = {
             id: Date.now() + '-' + Math.random().toString(36).substr(2, 9),
+            timestamp: new Date().toISOString(),
             nome: nome,
-            whatsapp: r['WhatsApp'] || r.whatsapp || r.telefone || '',
+            whatsapp: telefone.replace(/\D/g, ''),
             estado: r.estado || r.uf || r.Estado || '',
             cidade: r.cidade || r.Cidade || '',
-            categoria: categoria
+            categoria: categoria,
+            confianca: confianca,
+            tags: tags,
+            fonte: fonte,
+            importadoEm: r.created_at || new Date().toISOString()
         };
 
         db[categoria].push(contato);
+        stats[categoria]++;
         count++;
     });
 
@@ -789,11 +945,16 @@ function confirmarImportacao() {
     salvarDB();
 
     document.getElementById('importPreview').style.display = 'none';
-    document.getElementById('alertaImport').innerHTML = '<div class="alert success">✅ ' + count + ' importados!</div>';
+    document.getElementById('alertaImport').innerHTML =
+        '<div class="alert success">✅ ' + count + ' importados!<br>' +
+        '🚚 ' + stats.motoristas + ' motoristas | 📦 ' + stats.fornecedores + ' fornecedores | 👥 ' + stats.clientes + ' clientes</div>';
     dadosPendentes = null;
     document.getElementById('fileInput').value = '';
 
-    addMsgAgente('📥 Importei ' + count + ' contatos!');
+    addMsgAgente('📥 Importei ' + count + ' contatos com triagem inteligente!<br>' +
+                 '🚚 ' + stats.motoristas + ' motoristas<br>' +
+                 '📦 ' + stats.fornecedores + ' fornecedores<br>' +
+                 '👥 ' + stats.clientes + ' clientes');
 }
 
 function cancelarImportacao() {
@@ -1044,7 +1205,7 @@ function processarPergunta(msg) {
     // Respostas padrão
     if (ml.includes('resumo') || ml.includes('status') || ml.includes('quanto')) {
         const total = db.motoristas.length + db.fornecedores.length + db.clientes.length;
-        return '📊 <strong>Resumo v6.12:</strong><br><br>' +
+        return '📊 <strong>Resumo v6.15:</strong><br><br>' +
                '🚚 ' + db.motoristas.length + ' motoristas<br>' +
                '📦 ' + db.fornecedores.length + ' fornecedores<br>' +
                '👥 ' + db.clientes.length + ' clientes<br>' +
@@ -1164,7 +1325,7 @@ renderConhecimentos();
 renderConversas();
 
 setTimeout(() => {
-    let msg = '👋 Olá Anderson! <strong>Enside Agent v6.12 INTEGRADO</strong><br><br>';
+    let msg = '👋 Olá Anderson! <strong>Enside Agent v6.15 ULTRA COMPLETO</strong><br><br>';
     msg += '📱 WhatsApp: ' + formatarTelefone(db.whatsapp.numeroVinculado) + '<br>';
     msg += '🚚 ' + db.motoristas.length + ' motoristas | 📦 ' + db.fornecedores.length + ' fornecedores | 👥 ' + db.clientes.length + ' clientes<br>';
     msg += '📚 <strong>' + db.conhecimentos.length + ' conhecimentos</strong> na base<br><br>';
@@ -1178,8 +1339,190 @@ setTimeout(() => {
     addMsgAgente(msg);
 }, 500);
 
-console.log('✅ ENSIDE v6.12 INTEGRADO - CONHECIMENTOS PRESERVADOS - PRONTO!');
+// ==================== GOOGLE SHEETS INTEGRATION ====================
+function carregarConfigSheets() {
+    // Carregar configurações salvas
+    if (db.config.planilhaId) {
+        document.getElementById('sheetsId').value = db.config.planilhaId;
+    }
+    if (db.config.webAppUrl) {
+        document.getElementById('sheetsWebApp').value = db.config.webAppUrl;
+    }
+}
+
+function salvarConfigSheets() {
+    const planilhaId = document.getElementById('sheetsId').value.trim();
+    const webAppUrl = document.getElementById('sheetsWebApp').value.trim();
+
+    if (!planilhaId || !webAppUrl) {
+        document.getElementById('sheetsStatus').innerHTML =
+            '<div class="alert error">❌ Preencha o ID da planilha e a URL do Web App!</div>';
+        return;
+    }
+
+    db.config.planilhaId = planilhaId;
+    db.config.webAppUrl = webAppUrl;
+    salvarDB();
+
+    document.getElementById('sheetsStatus').innerHTML =
+        '<div class="alert success">✅ Configuração salva com sucesso!</div>';
+
+    addMsgAgente('📊 Configuração do Google Sheets salva!<br>Planilha: ' + planilhaId.slice(0, 15) + '...');
+}
+
+async function sincronizarSheets(tipo) {
+    const webAppUrl = db.config.webAppUrl;
+    if (!webAppUrl) {
+        document.getElementById('sheetsStatus').innerHTML =
+            '<div class="alert error">❌ Configure a URL do Web App primeiro!</div>';
+        return;
+    }
+
+    const contatos = db[tipo] || [];
+    if (!contatos.length) {
+        document.getElementById('sheetsStatus').innerHTML =
+            '<div class="alert warning">⚠️ Nenhum ' + tipo.slice(0, -1) + ' para sincronizar!</div>';
+        return;
+    }
+
+    document.getElementById('sheetsStatus').innerHTML =
+        '<div class="alert info">🔄 Sincronizando ' + contatos.length + ' ' + tipo + '...</div>';
+
+    // Preparar dados para enviar
+    const dados = contatos.map(c => ({
+        nome: c.nome || '',
+        whatsapp: c.whatsapp || '',
+        estado: c.estado || '',
+        cidade: c.cidade || '',
+        categoria: tipo,
+        tags: c.tags || '',
+        data: c.timestamp || c.importadoEm || new Date().toISOString()
+    }));
+
+    try {
+        const response = await fetch(webAppUrl, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                action: 'append',
+                aba: tipo.charAt(0).toUpperCase() + tipo.slice(1),
+                dados: dados
+            })
+        });
+
+        // Como estamos usando no-cors, não temos acesso à resposta
+        document.getElementById('sheetsStatus').innerHTML =
+            '<div class="alert success">✅ ' + contatos.length + ' ' + tipo + ' enviados para Google Sheets!<br>' +
+            '<small>Verifique a planilha para confirmar.</small></div>';
+
+        db.agente.xp += 10;
+        salvarDB();
+
+        addMsgAgente('📊 Sincronizei ' + contatos.length + ' ' + tipo + ' com Google Sheets!');
+
+    } catch (error) {
+        document.getElementById('sheetsStatus').innerHTML =
+            '<div class="alert error">❌ Erro ao sincronizar: ' + error.message + '</div>';
+        console.error('Erro sync:', error);
+    }
+}
+
+async function sincronizarTodosSheets() {
+    document.getElementById('sheetsStatus').innerHTML =
+        '<div class="alert info">🔄 Sincronizando todos os contatos...</div>';
+
+    await sincronizarSheets('motoristas');
+    await new Promise(r => setTimeout(r, 1000));
+    await sincronizarSheets('fornecedores');
+    await new Promise(r => setTimeout(r, 1000));
+    await sincronizarSheets('clientes');
+
+    document.getElementById('sheetsStatus').innerHTML =
+        '<div class="alert success">✅ Todos os contatos foram enviados para Google Sheets!</div>';
+}
+
+async function importarDeSheets() {
+    const webAppUrl = db.config.webAppUrl;
+    if (!webAppUrl) {
+        document.getElementById('sheetsStatus').innerHTML =
+            '<div class="alert error">❌ Configure a URL do Web App primeiro!</div>';
+        return;
+    }
+
+    document.getElementById('sheetsStatus').innerHTML =
+        '<div class="alert info">📥 Buscando contatos da planilha...</div>';
+
+    try {
+        // Fazer request GET para buscar dados
+        const response = await fetch(webAppUrl + '?action=get', {
+            method: 'GET'
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+
+            if (data.motoristas) {
+                data.motoristas.forEach(c => {
+                    if (c.nome && !db.motoristas.some(m => m.whatsapp === c.whatsapp)) {
+                        db.motoristas.push({
+                            id: Date.now() + '-' + Math.random().toString(36).substr(2, 9),
+                            ...c,
+                            categoria: 'motoristas'
+                        });
+                    }
+                });
+            }
+
+            if (data.fornecedores) {
+                data.fornecedores.forEach(c => {
+                    if (c.nome && !db.fornecedores.some(f => f.whatsapp === c.whatsapp)) {
+                        db.fornecedores.push({
+                            id: Date.now() + '-' + Math.random().toString(36).substr(2, 9),
+                            ...c,
+                            categoria: 'fornecedores'
+                        });
+                    }
+                });
+            }
+
+            if (data.clientes) {
+                data.clientes.forEach(c => {
+                    if (c.nome && !db.clientes.some(cl => cl.whatsapp === c.whatsapp)) {
+                        db.clientes.push({
+                            id: Date.now() + '-' + Math.random().toString(36).substr(2, 9),
+                            ...c,
+                            categoria: 'clientes'
+                        });
+                    }
+                });
+            }
+
+            salvarDB();
+            document.getElementById('sheetsStatus').innerHTML =
+                '<div class="alert success">✅ Importação concluída! Verifique a aba Motoristas.</div>';
+
+            addMsgAgente('📥 Importei novos contatos do Google Sheets!');
+        } else {
+            throw new Error('Resposta inválida do servidor');
+        }
+
+    } catch (error) {
+        document.getElementById('sheetsStatus').innerHTML =
+            '<div class="alert warning">⚠️ Não foi possível importar automaticamente.<br>' +
+            'Use a função de importar arquivo CSV exportado da planilha.</div>';
+        console.error('Erro import:', error);
+    }
+}
+
+// Carregar config do Sheets ao iniciar
+setTimeout(carregarConfigSheets, 100);
+
+console.log('✅ ENSIDE v6.15 ULTRA COMPLETO - TRIAGEM IA + GOOGLE SHEETS - PRONTO!');
 console.log('📚 Conhecimentos carregados:', db.conhecimentos.length);
+console.log('📊 Google Sheets configurado:', db.config.planilhaId ? 'Sim' : 'Não');
 </script>
 </body>
 </html>
