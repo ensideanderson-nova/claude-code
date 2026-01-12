@@ -1,5 +1,5 @@
-name: Claude Issue Triage
-description: Automatically triage GitHub issues using Claude Code
+name: ESPECIALISTA-IA Issue Triage
+description: Automatically triage GitHub issues using ESPECIALISTA-IA Code
 on:
   issues:
     types: [opened]
@@ -18,8 +18,8 @@ jobs:
 
       - name: Create triage prompt
         run: |
-          mkdir -p /tmp/claude-prompts
-          cat > /tmp/claude-prompts/triage-prompt.txt << 'EOF'
+          mkdir -p /tmp/especialista-ia-prompts
+          cat > /tmp/especialista-ia-prompts/triage-prompt.txt << 'EOF'
           You're an issue triage assistant for GitHub issues. Your task is to analyze the issue and select appropriate labels from the provided list.
 
           IMPORTANT: Don't post any comments or messages to the issue. Your only action should be to apply labels.
@@ -94,10 +94,10 @@ jobs:
           }
           EOF
 
-      - name: Run Claude Code for Issue Triage
+      - name: Run ESPECIALISTA-IA Code for Issue Triage
         uses: anthropics/claude-code-base-action@beta
         with:
-          prompt_file: /tmp/claude-prompts/triage-prompt.txt
+          prompt_file: /tmp/especialista-ia-prompts/triage-prompt.txt
           allowed_tools: "Bash(gh label list),mcp__github__get_issue,mcp__github__get_issue_comments,mcp__github__update_issue,mcp__github__search_issues,mcp__github__list_issues"
           timeout_minutes: "5"
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}

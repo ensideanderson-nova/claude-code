@@ -57,7 +57,7 @@ async function triggerDedupeWorkflow(
   }
 
   await githubRequest(
-    `/repos/${owner}/${repo}/actions/workflows/claude-dedupe-issues.yml/dispatches`,
+    `/repos/${owner}/${repo}/actions/workflows/especialista-ia-dedupe-issues.yml/dispatches`,
     token,
     'POST',
     {
