@@ -1,5 +1,5 @@
-name: Claude Issue Dedupe
-description: Automatically dedupe GitHub issues using Claude Code
+name: ESPECIALISTA-IA Issue Dedupe
+description: Automatically dedupe GitHub issues using ESPECIALISTA-IA Code
 on:
   issues:
     types: [opened]
@@ -11,7 +11,7 @@ on:
         type: string
 
 jobs:
-  claude-dedupe-issues:
+  especialista-ia-dedupe-issues:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -22,7 +22,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Run Claude Code slash command
+      - name: Run ESPECIALISTA-IA Code slash command
         uses: anthropics/claude-code-base-action@beta
         with:
           prompt: "/dedupe ${{ github.repository }}/issues/${{ github.event.issue.number || inputs.issue_number }}"

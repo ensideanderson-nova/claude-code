@@ -1,4 +1,4 @@
-name: Claude Code
+name: ESPECIALISTA-IA Code
 
 on:
   issue_comment:
@@ -11,12 +11,12 @@ on:
     types: [submitted]
 
 jobs:
-  claude:
+  especialista-ia:
     if: |
-      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
-      (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
-      (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude')) ||
-      (github.event_name == 'issues' && (contains(github.event.issue.body, '@claude') || contains(github.event.issue.title, '@claude')))
+      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@ESPECIALISTA-IA')) ||
+      (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@ESPECIALISTA-IA')) ||
+      (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@ESPECIALISTA-IA')) ||
+      (github.event_name == 'issues' && (contains(github.event.issue.body, '@ESPECIALISTA-IA') || contains(github.event.issue.title, '@ESPECIALISTA-IA')))
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -29,8 +29,8 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Run Claude Code
-        id: claude
+      - name: Run ESPECIALISTA-IA Code
+        id: especialista-ia
         uses: anthropics/claude-code-action@beta
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
