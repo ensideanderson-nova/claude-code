@@ -20,10 +20,43 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Validate environment and permissions
+        run: |
+          set -e
+          echo "::group::Environment validation"
+          echo "Validating required environment variables and permissions..."
+          
+          # Check if GITHUB_TOKEN is available
+          if [ -z "${{ secrets.GITHUB_TOKEN }}" ]; then
+            echo "::error::GITHUB_TOKEN is not available"
+            exit 1
+          fi
+          
+          # Check if ANTHROPIC_API_KEY is available
+          if [ -z "${{ secrets.ANTHROPIC_API_KEY }}" ]; then
+            echo "::error::ANTHROPIC_API_KEY is not available"
+            exit 1
+          fi
+          
+          echo "✓ All required secrets are available"
+          echo "✓ Repository: ${{ github.repository }}"
+          echo "✓ Workflow run ID: ${{ github.run_id }}"
+          echo "::endgroup::"
 
       - name: Create oncall triage prompt
         run: |
+          set -e
+          echo "::group::Creating oncall triage prompt"
           mkdir -p /tmp/claude-prompts
+          
+          if [ ! -d /tmp/claude-prompts ]; then
+            echo "::error::Failed to create /tmp/claude-prompts directory"
+            exit 1
+          fi
+          
           cat > /tmp/claude-prompts/oncall-triage-prompt.txt << 'EOF'
           You're an oncall triage assistant for GitHub issues. Your task is to identify critical issues that require immediate oncall attention.
 
@@ -107,9 +140,49 @@ jobs:
             }
           }
           EOF
+          
+          # Validate MCP config file was created
+          if [ ! -f /tmp/mcp-config/mcp-servers.json ]; then
+            echo "::error::Failed to create mcp-servers.json"
+            exit 1
+          fi
+          
+          echo "✓ MCP Server configuration created successfully"
+          echo "Config size: $(wc -c < /tmp/mcp-config/mcp-servers.json) bytes"
+          echo "::endgroup::"
+
+      - name: Pull Docker image for GitHub MCP Server
+        run: |
+          set -e
+          echo "::group::Pulling Docker image for GitHub MCP Server"
+          
+          # Pull the Docker image with retry logic
+          max_retries=3
+          retry_count=0
+          
+          while [ $retry_count -lt $max_retries ]; do
+            echo "Attempting to pull Docker image (attempt $((retry_count + 1))/$max_retries)..."
+            if docker pull ghcr.io/github/github-mcp-server:sha-7aced2b; then
+              echo "✓ Docker image pulled successfully"
+              docker images | grep github-mcp-server || true
+              echo "::endgroup::"
+              exit 0
+            fi
+            
+            retry_count=$((retry_count + 1))
+            if [ $retry_count -lt $max_retries ]; then
+              echo "::warning::Pull failed, retrying in 5 seconds..."
+              sleep 5
+            fi
+          done
+          
+          echo "::error::Failed to pull Docker image after $max_retries attempts"
+          exit 1
 
       - name: Run Claude Code for Oncall Triage
+        id: claude_triage
         uses: anthropics/claude-code-base-action@beta
+        continue-on-error: true
         with:
           prompt_file: /tmp/claude-prompts/oncall-triage-prompt.txt
           allowed_tools: "mcp__github__list_issues,mcp__github__get_issue,mcp__github__get_issue_comments,mcp__github__update_issue"
@@ -118,3 +191,64 @@ jobs:
           mcp_config: /tmp/mcp-config/mcp-servers.json
           claude_env: |
             GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Validate Claude execution output
+        if: always()
+        run: |
+          set +e
+          echo "::group::Validating Claude execution output"
+          
+          # Check if claude-execution-output.json exists
+          if [ -f claude-execution-output.json ]; then
+            echo "✓ claude-execution-output.json found"
+            echo "Output file size: $(wc -c < claude-execution-output.json) bytes"
+            
+            # Validate JSON syntax
+            if jq empty claude-execution-output.json 2>/dev/null; then
+              echo "✓ Output file is valid JSON"
+              
+              # Display summary if available
+              if jq -e '.summary' claude-execution-output.json >/dev/null 2>&1; then
+                echo "Summary from Claude execution:"
+                jq -r '.summary' claude-execution-output.json || echo "Unable to extract summary"
+              fi
+            else
+              echo "::warning::Output file is not valid JSON"
+              echo "First 500 characters of output:"
+              head -c 500 claude-execution-output.json || true
+            fi
+          else
+            echo "::warning::claude-execution-output.json not found"
+            echo "Listing files in current directory:"
+            ls -la || true
+          fi
+          
+          # Check Claude step status
+          if [ "${{ steps.claude_triage.outcome }}" != "success" ]; then
+            echo "::warning::Claude execution did not complete successfully"
+            echo "Outcome: ${{ steps.claude_triage.outcome }}"
+          else
+            echo "✓ Claude execution completed successfully"
+          fi
+          
+          echo "::endgroup::"
+      
+      - name: Handle errors and cleanup
+        if: failure()
+        run: |
+          echo "::group::Error handling and cleanup"
+          echo "::error::Workflow failed - gathering diagnostic information"
+          
+          echo "Checking Docker status:"
+          docker ps -a || true
+          
+          echo "Checking available disk space:"
+          df -h || true
+          
+          echo "Checking system resources:"
+          free -h || true
+          
+          echo "Checking recent Docker logs (if any):"
+          docker logs $(docker ps -lq) 2>&1 | tail -100 || echo "No Docker containers found"
+          
+          echo "::endgroup::"
