@@ -20,10 +20,50 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup Node.js (for debugging)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies with caching
+        run: |
+          set -x  # Enable command echoing for debugging
+          echo "Installing dependencies..."
+          if command -v bun &> /dev/null; then
+            echo "Using bun for package installation"
+            bun install --force
+          elif command -v yarn &> /dev/null; then
+            echo "Using yarn for package installation"
+            yarn install --force
+          else
+            echo "Using npm for package installation"
+            npm install --force
+          fi
+          echo "Dependencies installed successfully"
+
+      - name: Validate environment
+        run: |
+          set -x  # Enable debugging
+          echo "=== Environment Validation ==="
+          echo "Node version: $(node --version || echo 'Node not found')"
+          echo "NPM version: $(npm --version || echo 'NPM not found')"
+          echo "Working directory: $(pwd)"
+          echo "GitHub Token present: ${{ secrets.GITHUB_TOKEN != '' }}"
+          echo "Anthropic API Key present: ${{ secrets.ANTHROPIC_API_KEY != '' }}"
+          echo "Repository: ${{ github.repository }}"
+          echo "=== Directory contents ==="
+          ls -la || true
+          echo "=== End validation ==="
 
       - name: Create oncall triage prompt
         run: |
-          mkdir -p /tmp/claude-prompts
+          set -x  # Enable debugging
+          echo "Creating prompt directory..."
+          mkdir -p /tmp/claude-prompts || { echo "Failed to create directory"; exit 1; }
+          echo "Writing prompt file..."
           cat > /tmp/claude-prompts/oncall-triage-prompt.txt << 'EOF'
           You're an oncall triage assistant for GitHub issues. Your task is to identify critical issues that require immediate oncall attention.
 
@@ -83,10 +123,15 @@ jobs:
              - If no issues qualified, state that clearly
              - Format the summary clearly for easy reading
           EOF
+          echo "Prompt file created successfully"
+          echo "Prompt file size: $(wc -c < /tmp/claude-prompts/oncall-triage-prompt.txt) bytes"
 
       - name: Setup GitHub MCP Server
         run: |
-          mkdir -p /tmp/mcp-config
+          set -x  # Enable debugging
+          echo "Creating MCP config directory..."
+          mkdir -p /tmp/mcp-config || { echo "Failed to create MCP config directory"; exit 1; }
+          echo "Writing MCP server configuration..."
           cat > /tmp/mcp-config/mcp-servers.json << 'EOF'
           {
             "mcpServers": {
@@ -107,8 +152,13 @@ jobs:
             }
           }
           EOF
+          echo "MCP config created successfully"
+          echo "MCP config size: $(wc -c < /tmp/mcp-config/mcp-servers.json) bytes"
+          cat /tmp/mcp-config/mcp-servers.json || { echo "Failed to read MCP config"; exit 1; }
 
       - name: Run Claude Code for Oncall Triage
+        id: claude_execution
+        continue-on-error: true
         uses: anthropics/claude-code-base-action@beta
         with:
           prompt_file: /tmp/claude-prompts/oncall-triage-prompt.txt
@@ -118,3 +168,31 @@ jobs:
           mcp_config: /tmp/mcp-config/mcp-servers.json
           claude_env: |
             GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Capture and log execution output
+        if: always()
+        run: |
+          set -x  # Enable debugging
+          echo "=== Claude Execution Results ==="
+          echo "Exit code: ${{ steps.claude_execution.outcome }}"
+          
+          # Check if output file exists
+          if [ -f "claude-execution-output.json" ]; then
+            echo "Output file found"
+            echo "Output file size: $(wc -c < claude-execution-output.json) bytes"
+            echo "=== Output contents ==="
+            cat claude-execution-output.json || echo "Failed to read output file"
+          else
+            echo "Warning: claude-execution-output.json not found"
+            echo "Listing files in current directory:"
+            ls -la || true
+          fi
+          
+          # Check for errors in logs
+          if [ "${{ steps.claude_execution.outcome }}" != "success" ]; then
+            echo "=== Execution failed ==="
+            echo "Please check the logs above for error details"
+            exit 1
+          else
+            echo "=== Execution succeeded ==="
+          fi
