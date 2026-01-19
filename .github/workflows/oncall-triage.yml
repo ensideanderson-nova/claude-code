@@ -84,8 +84,15 @@ jobs:
              - Format the summary clearly for easy reading
           EOF
 
+      - name: Clear Docker Cache
+        run: |
+          docker system prune -af || true
+          docker volume prune -f || true
+          echo "Docker cache cleared"
+
       - name: Setup GitHub MCP Server
         run: |
+          set -x  # Enable debug logging
           mkdir -p /tmp/mcp-config
           cat > /tmp/mcp-config/mcp-servers.json << 'EOF'
           {
@@ -107,6 +114,21 @@ jobs:
             }
           }
           EOF
+          echo "MCP config created successfully"
+          cat /tmp/mcp-config/mcp-servers.json
+
+      - name: Validate Environment Variables
+        run: |
+          set -x  # Enable debug logging
+          if [ -z "${{ secrets.ANTHROPIC_API_KEY }}" ]; then
+            echo "ERROR: ANTHROPIC_API_KEY is not set"
+            exit 1
+          fi
+          if [ -z "${{ secrets.GITHUB_TOKEN }}" ]; then
+            echo "ERROR: GITHUB_TOKEN is not set"
+            exit 1
+          fi
+          echo "Environment variables validated successfully"
 
       - name: Run Claude Code for Oncall Triage
         uses: anthropics/claude-code-base-action@beta
@@ -118,3 +140,24 @@ jobs:
           mcp_config: /tmp/mcp-config/mcp-servers.json
           claude_env: |
             GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
+        id: claude_run
+
+      - name: Handle Claude Execution Output
+        if: always()
+        run: |
+          set -x  # Enable debug logging
+          echo "Checking for claude-execution-output.json..."
+          if [ -f "claude-execution-output.json" ]; then
+            echo "Output file found:"
+            cat claude-execution-output.json || echo "Failed to read output file"
+          else
+            echo "No claude-execution-output.json found"
+          fi
+          
+          # Check Claude run status
+          if [ "${{ steps.claude_run.outcome }}" != "success" ]; then
+            echo "WARNING: Claude Code action did not complete successfully"
+            echo "Outcome: ${{ steps.claude_run.outcome }}"
+            exit 1
+          fi
