@@ -14,9 +14,22 @@ This workflow identifies and labels critical blocking issues that require oncall
 ## Configuration
 
 ### Active Triggers
-- **Push to test branch**: `copilot/update-oncall-triage-workflow-yet-again` (temporary for testing only)
-- **Scheduled runs**: Every 6 hours via cron
+- **Push to test branch**: `copilot/update-oncall-triage-workflow-yet-again` (⚠️ **temporary for testing only** - should be removed for production)
+- **Scheduled runs**: Every 6 hours via cron (production-ready)
 - **Manual trigger**: `workflow_dispatch` - Can be triggered manually from GitHub Actions UI
+
+### Recommended Production Configuration
+
+For production use, it's recommended to remove the push trigger and use only schedule + manual triggers:
+
+```yaml
+on:
+  schedule:
+    - cron: '0 */6 * * *'  # Every 6 hours
+  workflow_dispatch: # Manual trigger
+```
+
+This is because oncall triage analyzes issues, not code, so it doesn't need to run on branch updates.
 
 ### Implementation
 - Uses **Bun** runtime for fast TypeScript execution
