@@ -1,62 +1,54 @@
 # Oncall Issue Triage Workflow
 
 ## Overview
-This workflow identifies and labels critical blocking issues that require oncall attention using Claude AI analysis.
+This workflow identifies and labels critical blocking issues that require oncall attention using GroqCloud AI analysis.
 
 ## Requirements
-- **Anthropic API Key**: This workflow requires a valid `ANTHROPIC_API_KEY` secret with sufficient credits
-- The workflow uses Claude AI to analyze issues and determine which ones need oncall attention
+- **Groq API Key**: This workflow requires a valid `GROQ_API_KEY` secret
+- The workflow uses Groq's Llama models to analyze issues and determine which ones need oncall attention
+- Free tier available at https://console.groq.com
 
 ## Current Status
-⚠️ **Automatic triggers are currently DISABLED** to prevent failures when API credits are low.
+✅ **Automatic triggers are ENABLED** - Groq provides free API access with generous rate limits.
 
 ## Configuration
 
-### Triggers (Currently Disabled)
-The following triggers are commented out:
-- **Push to test branch**: `add-oncall-triage-workflow` (was temporary for testing only)
-- **Scheduled runs**: Every 6 hours via cron
-
-**Note**: This workflow analyzes issues, not code, so it doesn't need to run on specific branches. When re-enabling, you may want to remove the push trigger entirely and only use the schedule trigger.
-
 ### Active Triggers
-- **Manual trigger only**: `workflow_dispatch` - Can be triggered manually from GitHub Actions UI
+- **Push to test branch**: `copilot/update-oncall-triage-workflow-yet-again` (temporary for testing only)
+- **Scheduled runs**: Every 6 hours via cron
+- **Manual trigger**: `workflow_dispatch` - Can be triggered manually from GitHub Actions UI
 
-## How to Re-enable Automatic Runs
+### Implementation
+- Uses **Bun** runtime for fast TypeScript execution
+- Script: `scripts/oncall-triage-groq.ts`
+- AI Model: **Llama 3.3 70B Versatile** via GroqCloud API
+- Timeout: 15 minutes
 
-When API credits are available, you can re-enable automatic triggers. Since this workflow analyzes issues (not code), the schedule trigger is typically most useful:
+## How to Setup
 
-```yaml
-on:
-  schedule:
-    - cron: '0 */6 * * *'  # Every 6 hours
-  workflow_dispatch: # Manual trigger
-```
-
-Or, if you need a push trigger for testing purposes:
-
-```yaml
-on:
-  push:
-    branches:
-      - your-test-branch-name  # Replace with your preferred test branch
-  schedule:
-    - cron: '0 */6 * * *'  # Every 6 hours
-  workflow_dispatch: # Manual trigger
-```
+1. Get a free Groq API key from https://console.groq.com
+2. Add the API key as a secret in your repository:
+   - Go to Settings > Secrets and variables > Actions
+   - Click "New repository secret"
+   - Name: `GROQ_API_KEY`
+   - Value: Your Groq API key
 
 ## Troubleshooting
 
-### "Credit balance is too low" Error
-This error occurs when the Anthropic API key doesn't have sufficient credits. To resolve:
-1. Add credits to your Anthropic account
-2. Or keep the workflow on manual trigger only
-3. Or use a different API key with credits
+### "GROQ_API_KEY not found" Error
+This error occurs when the Groq API key secret is not configured. To resolve:
+1. Get a free API key from https://console.groq.com
+2. Add it as a repository secret named `GROQ_API_KEY`
 
 ### Workflow Not Running
 - Check that the workflow trigger conditions are met
-- Verify the `ANTHROPIC_API_KEY` secret is set and valid
+- Verify the `GROQ_API_KEY` secret is set and valid
 - Check GitHub Actions logs for detailed error messages
+
+### Rate Limiting
+Groq provides generous free tier limits. If you hit rate limits:
+- The workflow will retry failed requests
+- Consider reducing the schedule frequency (e.g., every 12 hours instead of 6)
 
 ## Manual Execution
 To manually trigger the workflow:
@@ -64,3 +56,11 @@ To manually trigger the workflow:
 2. Select "Oncall Issue Triage" workflow
 3. Click "Run workflow"
 4. Select the branch and click "Run workflow"
+
+## How It Works
+
+1. **Fetches Issues**: Gets all open issues updated in the last 3 days
+2. **Quick Filters**: Checks if issues are bugs and have ≥50 engagements (comments + reactions)
+3. **AI Analysis**: Uses Groq's Llama model to determine if issues are truly blocking
+4. **Labels Issues**: Adds "oncall" label to critical blocking issues
+5. **Reports Summary**: Outputs detailed summary of all analyzed issues
