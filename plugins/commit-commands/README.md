@@ -1,6 +1,6 @@
 # Commit Commands Plugin
 
-Streamline your git workflow with simple commands for committing, pushing, and creating pull requests.
+Streamline your git workflow with simple commands for pulling, committing, pushing, and creating pull requests.
 
 ## Overview
 
@@ -43,6 +43,45 @@ Creates a git commit with an automatically generated commit message based on sta
 - Follows conventional commit practices
 - Avoids committing files with secrets (.env, credentials.json)
 - Includes Claude Code attribution in commit message
+
+### `/pull`
+
+Pulls the latest changes from the remote repository for the current branch.
+
+**What it does:**
+1. Checks if the current branch has a remote tracking branch
+2. Fetches and merges changes from the remote repository
+3. Shows the status after pulling to confirm the operation
+4. Reports any conflicts or issues that need attention
+
+**Usage:**
+```bash
+/pull
+```
+
+**Example workflow:**
+```bash
+# Before starting work on a shared branch
+/pull
+
+# Claude will:
+# - Check the remote tracking branch
+# - Pull the latest changes
+# - Merge them into your current branch
+# - Show you the updated status
+```
+
+**Features:**
+- Automatically pulls from the correct remote tracking branch
+- Provides clear feedback about what was updated
+- Handles fast-forward merges automatically
+- Reports any conflicts that need manual resolution
+
+**When to use:**
+- Before starting work on a branch to get the latest changes
+- When collaborating with others on the same branch
+- To sync your local branch with remote updates
+- As part of your regular development workflow
 
 ### `/commit-push-pr`
 
@@ -131,6 +170,13 @@ This plugin is included in the Claude Code repository. The commands are automati
 
 ## Best Practices
 
+### Using `/pull`
+- Always pull before starting new work on a shared branch
+- Run after switching to a branch that others are working on
+- Use to stay synchronized with team changes
+- Review the changes that were pulled in
+- Resolve any conflicts immediately
+
 ### Using `/commit`
 - Review the staged changes before committing
 - Let Claude analyze your changes and match your repo's commit style
@@ -151,6 +197,17 @@ This plugin is included in the Claude Code repository. The commands are automati
 - Helps maintain a tidy local repository
 
 ## Workflow Integration
+
+### Collaborative workflow:
+```bash
+# Start work on a shared branch
+/pull  # Get latest changes
+# Write code
+/commit  # Commit your changes
+/pull  # Pull again before pushing
+# If there are conflicts, resolve them
+/commit-push-pr  # Push and create PR
+```
 
 ### Quick commit workflow:
 ```bash
@@ -184,6 +241,25 @@ This plugin is included in the Claude Code repository. The commands are automati
 
 ## Troubleshooting
 
+### `/pull` merge conflicts
+
+**Issue**: Merge conflicts after pulling
+
+**Solution**:
+- Review conflicting files using `git status`
+- Resolve conflicts manually in the affected files
+- Stage resolved files with `git add <file>`
+- Complete the merge with `git commit`
+
+### `/pull` no tracking branch
+
+**Issue**: Current branch has no upstream tracking branch
+
+**Solution**:
+- Set tracking branch: `git branch --set-upstream-to=origin/<branch>`
+- Or pull explicitly: `git pull origin <branch-name>`
+- Create a PR first if the branch doesn't exist remotely
+
 ### `/commit` creates empty commit
 
 **Issue**: No changes to commit
@@ -211,7 +287,8 @@ This plugin is included in the Claude Code repository. The commands are automati
 
 ## Tips
 
-- **Combine with other tools**: Use `/commit` during development, then `/commit-push-pr` when ready
+- **Pull before starting work**: Always run `/pull` when starting work on a shared branch
+- **Combine with other tools**: Use `/pull` to sync, `/commit` during development, then `/commit-push-pr` when ready
 - **Let Claude draft messages**: The commit message analysis learns from your repo's style
 - **Regular cleanup**: Run `/clean_gone` weekly to maintain a clean branch list
 - **Review before pushing**: Always review the commit message and changes before pushing
