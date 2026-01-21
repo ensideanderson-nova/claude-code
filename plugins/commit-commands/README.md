@@ -204,8 +204,7 @@ This plugin is included in the Claude Code repository. The commands are automati
 /pull  # Get latest changes
 # Write code
 /commit  # Commit your changes
-/pull  # Pull again before pushing
-# If there are conflicts, resolve them
+# Ready to create PR (consider /pull if working on active branch)
 /commit-push-pr  # Push and create PR
 ```
 
@@ -256,8 +255,8 @@ This plugin is included in the Claude Code repository. The commands are automati
 **Issue**: Current branch has no upstream tracking branch
 
 **Solution**:
-- Set tracking branch: `git branch --set-upstream-to=origin/<branch>`
-- Or pull explicitly: `git pull origin <branch-name>`
+- Set tracking branch: `git branch --set-upstream-to=origin/<branch> <local-branch>`
+- Or push with tracking: `git push -u origin <branch>`
 - Create a PR first if the branch doesn't exist remotely
 
 ### `/commit` creates empty commit
