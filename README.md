@@ -1,5 +1,6 @@
 # Claude Code
 
+[![.github/workflows/oncall-triage.yml](https://github.com/ensideanderson-nova/c-digo-claude/actions/workflows/oncall-triage.yml/badge.svg)](https://github.com/ensideanderson-nova/c-digo-claude/actions/workflows/oncall-triage.yml)
 ![](https://img.shields.io/badge/Node.js-18%2B-brightgreen?style=flat-square) [![npm]](https://www.npmjs.com/package/@anthropic-ai/claude-code)
 
 [npm]: https://img.shields.io/npm/v/@anthropic-ai/claude-code.svg?style=flat-square
